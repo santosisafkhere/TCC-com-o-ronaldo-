@@ -1,6 +1,6 @@
 {
-	"name": "EinVault",
-	"short_name": "EinVault",
+	"name": "Achei Meu Pet",
+	"short_name": "Achei Meu Pet",
 	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#ffffff",

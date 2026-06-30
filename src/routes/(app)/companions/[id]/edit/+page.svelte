@@ -69,7 +69,7 @@
 </script>
 
 <svelte:head>
-	<title>{t(locale, 'page.companion.edit.pageTitle', { name: companion.name })} | EinVault</title>
+	<title>{t(locale, 'page.companion.edit.pageTitle', { name: companion.name })} | Achei Meu Pet</title>
 </svelte:head>
 
 <div class="max-w-3xl mx-auto space-y-6">

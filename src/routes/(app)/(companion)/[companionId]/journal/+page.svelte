@@ -123,7 +123,7 @@
 </script>
 
 <svelte:head>
-	<title>{t(locale, 'page.journal.title')} | {companion.name} | EinVault</title>
+	<title>{t(locale, 'page.journal.title')} | {companion.name} | Achei Meu Pet</title>
 </svelte:head>
 
 <svelte:window onkeydown={handleEscapeForDetail} />

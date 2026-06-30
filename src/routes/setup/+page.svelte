@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-	<title>{t(locale, 'page.setup.title')} | EinVault</title>
+	<title>{t(locale, 'page.setup.title')} | Achei Meu Pet</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center bg-background p-4 md:p-0">

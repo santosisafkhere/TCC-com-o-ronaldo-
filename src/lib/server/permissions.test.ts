@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { db, schema } from '$lib/server/db';
-import { assertCanEditCompanion } from './permissions';
+import { assertCanEditCompanion, assertCanViewCompanion } from './permissions';
 
 type Locals = Parameters<typeof assertCanEditCompanion>[0];
 
@@ -8,7 +8,7 @@ function locals(user: { id: string; role: 'admin' | 'member' | 'caretaker' } | n
 	return { user, session: null, locale: 'en' } as unknown as Locals;
 }
 
-async function statusOf(p: Promise<void>): Promise<number | 'ok'> {
+async function statusOf(p: Promise<unknown>): Promise<number | 'ok'> {
 	try {
 		await p;
 		return 'ok';
@@ -17,17 +17,19 @@ async function statusOf(p: Promise<void>): Promise<number | 'ok'> {
 	}
 }
 
-describe('assertCanEditCompanion', () => {
+describe('companion permissions (ownership model)', () => {
 	beforeAll(async () => {
 		await db.insert(schema.users).values([
 			{ id: 'adm', username: 'adm', displayName: 'A', role: 'admin' },
-			{ id: 'mem', username: 'mem', displayName: 'M', role: 'member' },
+			{ id: 'owner', username: 'owner', displayName: 'O', role: 'member' },
+			{ id: 'other', username: 'other', displayName: 'X', role: 'member' },
 			{ id: 'ct-in', username: 'ctin', displayName: 'C1', role: 'caretaker' },
 			{ id: 'ct-out', username: 'ctout', displayName: 'C2', role: 'caretaker' }
 		] as (typeof schema.users.$inferInsert)[]);
 		await db.insert(schema.companions).values({
 			id: 'comp1',
-			name: 'Comp'
+			name: 'Comp',
+			ownerId: 'owner'
 		} as typeof schema.companions.$inferInsert);
 		await db.insert(schema.companionCaretakers).values({
 			companionId: 'comp1',
@@ -35,25 +37,60 @@ describe('assertCanEditCompanion', () => {
 		} as typeof schema.companionCaretakers.$inferInsert);
 	});
 
-	it('401 for anonymous', async () => {
-		expect(await statusOf(assertCanEditCompanion(locals(null), 'comp1'))).toBe(401);
+	describe('assertCanEditCompanion', () => {
+		it('401 for anonymous', async () => {
+			expect(await statusOf(assertCanEditCompanion(locals(null), 'comp1'))).toBe(401);
+		});
+
+		it('allows the owner and admins', async () => {
+			expect(
+				await statusOf(assertCanEditCompanion(locals({ id: 'adm', role: 'admin' }), 'comp1'))
+			).toBe('ok');
+			expect(
+				await statusOf(assertCanEditCompanion(locals({ id: 'owner', role: 'member' }), 'comp1'))
+			).toBe('ok');
+		});
+
+		it('403 for a member who is not the owner', async () => {
+			expect(
+				await statusOf(assertCanEditCompanion(locals({ id: 'other', role: 'member' }), 'comp1'))
+			).toBe(403);
+		});
+
+		it('allows assigned caretakers, 403 for unassigned', async () => {
+			expect(
+				await statusOf(assertCanEditCompanion(locals({ id: 'ct-in', role: 'caretaker' }), 'comp1'))
+			).toBe('ok');
+			expect(
+				await statusOf(assertCanEditCompanion(locals({ id: 'ct-out', role: 'caretaker' }), 'comp1'))
+			).toBe(403);
+		});
 	});
 
-	it('allows admins and members', async () => {
-		expect(
-			await statusOf(assertCanEditCompanion(locals({ id: 'adm', role: 'admin' }), 'comp1'))
-		).toBe('ok');
-		expect(
-			await statusOf(assertCanEditCompanion(locals({ id: 'mem', role: 'member' }), 'comp1'))
-		).toBe('ok');
-	});
+	describe('assertCanViewCompanion', () => {
+		it('401 for anonymous, 404 for missing', async () => {
+			expect(await statusOf(assertCanViewCompanion(locals(null), 'comp1'))).toBe(401);
+			expect(
+				await statusOf(assertCanViewCompanion(locals({ id: 'adm', role: 'admin' }), 'nope'))
+			).toBe(404);
+		});
 
-	it('allows assigned caretakers, 403 for unassigned', async () => {
-		expect(
-			await statusOf(assertCanEditCompanion(locals({ id: 'ct-in', role: 'caretaker' }), 'comp1'))
-		).toBe('ok');
-		expect(
-			await statusOf(assertCanEditCompanion(locals({ id: 'ct-out', role: 'caretaker' }), 'comp1'))
-		).toBe(403);
+		it('owner, admin and assigned caretaker may view', async () => {
+			expect(
+				await statusOf(assertCanViewCompanion(locals({ id: 'owner', role: 'member' }), 'comp1'))
+			).toBe('ok');
+			expect(
+				await statusOf(assertCanViewCompanion(locals({ id: 'adm', role: 'admin' }), 'comp1'))
+			).toBe('ok');
+			expect(
+				await statusOf(assertCanViewCompanion(locals({ id: 'ct-in', role: 'caretaker' }), 'comp1'))
+			).toBe('ok');
+		});
+
+		it('404 (not 403) for a non-owner member — existence is not leaked', async () => {
+			expect(
+				await statusOf(assertCanViewCompanion(locals({ id: 'other', role: 'member' }), 'comp1'))
+			).toBe(404);
+		});
 	});
 });

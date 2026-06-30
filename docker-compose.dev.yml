@@ -1,6 +1,6 @@
-# EinVault — Development / local build
+# Achei Meu Pet — Development / local build
 # Builds the image from the local Dockerfile instead of pulling from GHCR.
-# Use this when working on EinVault itself or testing Docker image changes.
+# Use this when working on Achei Meu Pet itself or testing Docker image changes.
 #
 # Usage:
 #   docker compose -f docker-compose.dev.yml up -d --build
@@ -23,7 +23,7 @@ services:
     user: '${PUID:-1000}:${PGID:-1000}'
 
     environment:
-      # Your public URL — must match the address you access EinVault from.
+      # Your public URL — must match the address you access Achei Meu Pet from.
       # Used for CSRF protection; the app will reject form submissions without it.
       ORIGIN: ${ORIGIN:-http://localhost:3000}
 

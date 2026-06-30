@@ -7,6 +7,7 @@ import { generateId } from '$lib/server/utils';
 import { parseReminderType, parseRecurrence } from '$lib/server/validation';
 import { completeReminder } from '$lib/server/reminders';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -31,6 +32,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 export const actions: Actions = {
 	add: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const title = String(data.get('title') ?? '').trim();
 		const description = String(data.get('description') ?? '').trim() || null;
@@ -68,6 +70,7 @@ export const actions: Actions = {
 
 	update: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		const title = String(data.get('title') ?? '').trim();
@@ -111,6 +114,7 @@ export const actions: Actions = {
 
 	complete: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		const andEvent = data.get('andEvent') === '1';
@@ -153,6 +157,7 @@ export const actions: Actions = {
 
 	restore: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		if (!id) return fail(400, { error: t(locals.locale, 'error.missingId') });
@@ -186,6 +191,7 @@ export const actions: Actions = {
 
 	delete: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 

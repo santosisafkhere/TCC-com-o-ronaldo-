@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
@@ -15,6 +16,7 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	// Caretakers cannot browse Immich; matches photos/from-immich and keeps
 	// the integration scoped to family members/admins only.
 	if (locals.user.role === 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
+	await assertCanEditCompanion(locals, params.companionId);
 
 	const client = getImmichClient();
 	if (!client) error(404, t(locals.locale, 'error.notFound'));

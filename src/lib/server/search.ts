@@ -17,6 +17,11 @@ export interface SearchFilters {
 	types: SearchEntityType[];
 	after?: string; // YYYY-MM-DD inclusive lower bound on event_date
 	before?: string; // YYYY-MM-DD inclusive upper bound
+	// Ownership scope: the companion ids the caller may read. Always enforced
+	// when present (undefined = unrestricted, e.g. admins). Empty = nothing
+	// visible, so the query matches no rows. The index holds every owner's data,
+	// so this is what keeps one owner's records out of another's results.
+	allowedCompanionIds?: string[];
 }
 
 export function hasActiveFilters(f: SearchFilters): boolean {
@@ -30,6 +35,16 @@ export function hasActiveFilters(f: SearchFilters): boolean {
 export function buildFilterClause(f: SearchFilters): { sql: string; params: string[] } {
 	const parts: string[] = [];
 	const params: string[] = [];
+	// Ownership scope first — enforced whenever provided, regardless of the
+	// user-supplied companion filter below.
+	if (f.allowedCompanionIds !== undefined) {
+		if (f.allowedCompanionIds.length === 0) {
+			parts.push('1 = 0');
+		} else {
+			parts.push(`s.companion_id IN (${f.allowedCompanionIds.map(() => '?').join(', ')})`);
+			params.push(...f.allowedCompanionIds);
+		}
+	}
 	if (f.companionIds.length) {
 		parts.push(`s.companion_id IN (${f.companionIds.map(() => '?').join(', ')})`);
 		params.push(...f.companionIds);

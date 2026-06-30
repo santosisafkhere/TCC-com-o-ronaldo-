@@ -40,6 +40,7 @@ export const actions: Actions = {
 
 		await db.insert(schema.companions).values({
 			id,
+			ownerId: locals.user.id,
 			name,
 			breed,
 			sex,

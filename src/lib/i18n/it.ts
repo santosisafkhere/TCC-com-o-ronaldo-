@@ -200,7 +200,7 @@ const messages: Record<keyof Messages, string> = {
 	'layout.caretaker.notOnShift': 'Non in turno. Prossimo turno:',
 	'layout.caretaker.noUpcomingShifts': 'Non in turno. Nessun turno programmato.',
 	'layout.caretaker.requiresActiveShift': 'richiede un turno attivo',
-	'layout.caretaker.shiftCalendarEvent': 'Turno EinVault',
+	'layout.caretaker.shiftCalendarEvent': 'Turno Achei Meu Pet',
 
 	// Page: 2FA
 	'page.twofa.title': 'Autenticazione a due fattori',
@@ -267,11 +267,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Ricorrenza predefinita aggiornata.',
 	'page.settings.notificationsCard': 'Notifiche',
 	'page.settings.notificationsDescription':
-		'Ricevi e-mail da EinVault. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
+		'Ricevi e-mail da Achei Meu Pet. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Ricevi notifiche push da EinVault. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
+		'Ricevi notifiche push da Achei Meu Pet. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
 	'page.settings.notificationsDescriptionBoth':
-		'Ricevi e-mail e notifiche push da EinVault. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
+		'Ricevi e-mail e notifiche push da Achei Meu Pet. I custodi ricevono avvisi solo per i promemoria dei compagni a loro assegnati.',
 	'page.settings.notifyReminderEmailLabel': 'Inviami una e-mail quando un promemoria è in scadenza',
 	'page.settings.notifyShiftEmailLabel':
 		'Inviami una e-mail 24 ore prima che un turno inizi o finisca',
@@ -280,7 +280,7 @@ const messages: Record<keyof Messages, string> = {
 		'Aggiungi un indirizzo e-mail al tuo account per ricevere le notifiche via e-mail.',
 	'page.settings.ntfyTopicLabel': 'Argomento ntfy',
 	'page.settings.ntfyTopicHint':
-		'Le notifiche push coprono i promemoria in scadenza e gli avvisi di turno per ciò che puoi vedere in EinVault. Vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi. Lascia vuoto per disattivare i push.',
+		'Le notifiche push coprono i promemoria in scadenza e gli avvisi di turno per ciò che puoi vedere in Achei Meu Pet. Vanno a questo argomento sul server ntfy configurato dal tuo amministratore. Scegli un nome lungo e casuale; chiunque lo conosca può iscriversi. Lascia vuoto per disattivare i push.',
 	'page.settings.securityCard': 'Sicurezza',
 	'page.settings.twofaOn': "L'autenticazione a due fattori è attiva.",
 	'page.settings.twofaOff':
@@ -306,9 +306,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.testSent': 'Notifica di prova inviata.',
 	'page.settings.testFailed': 'Prova non riuscita: {error}',
 	'error.testCooldown': "Attendi qualche secondo prima di inviare un'altra prova.",
-	'email.test.subject': 'Notifica di prova di EinVault',
+	'email.test.subject': 'Notifica di prova di Achei Meu Pet',
 	'email.test.body':
-		'Questa è una notifica di prova di EinVault. Se la stai leggendo, le tue impostazioni di notifica funzionano.',
+		'Questa è una notifica di prova di Achei Meu Pet. Se la stai leggendo, le tue impostazioni di notifica funzionano.',
 
 	// Page: settings (calendar feed)
 	'settings.calendar.title': 'Feed calendario',
@@ -445,7 +445,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.sexUnknown': 'Sconosciuto',
 
 	// Page: companion new
-	'page.companion.new.pageTitle': 'Aggiungi compagno | EinVault',
+	'page.companion.new.pageTitle': 'Aggiungi compagno | Achei Meu Pet',
 	'page.companion.new.heading': 'Aggiungi un compagno',
 	'page.companion.new.subheading': 'Compila quello che sai. Puoi sempre modificare dopo.',
 	'page.companion.new.submit': 'Aggiungi compagno',
@@ -504,7 +504,7 @@ const messages: Record<keyof Messages, string> = {
 	'overview.allCaughtUp': 'Tutto in ordine',
 	'overview.heading.companions': 'I tuoi compagni',
 	'overview.companions.addStart': 'Inizia un nuovo registro',
-	'overview.firstRun.title': 'Benvenuto su EinVault',
+	'overview.firstRun.title': 'Benvenuto su Achei Meu Pet',
 	'overview.firstRun.body':
 		'Aggiungi il tuo primo compagno per avviare la cartella sanitaria, il diario e la cura quotidiana.',
 	'overview.firstRun.cta': 'Aggiungi il primo compagno',
@@ -879,7 +879,7 @@ const messages: Record<keyof Messages, string> = {
 	// Aria labels
 	'aria.caretakerNav': 'Navigazione custode',
 	'aria.adminNav': 'Sezioni di amministrazione',
-	'aria.einvaultHome': 'Home di EinVault',
+	'aria.einvaultHome': 'Home di Achei Meu Pet',
 	'aria.goToSignIn': "Vai all'accesso",
 	'aria.mainNav': 'Navigazione principale',
 	'aria.deleteEntry': 'Elimina voce',
@@ -904,10 +904,10 @@ const messages: Record<keyof Messages, string> = {
 	'aria.themeMode': 'Modalità {label}',
 
 	// Email: password reset
-	'email.reset.subject': 'Reimposta la tua password di EinVault',
+	'email.reset.subject': 'Reimposta la tua password di Achei Meu Pet',
 	'email.reset.greeting': 'Ciao {name},',
 	'email.reset.body':
-		'È stata richiesta la reimpostazione della password per il tuo account EinVault ({username}). Usa il link qui sotto per scegliere una nuova password. Il link scade tra 30 minuti.',
+		'È stata richiesta la reimpostazione della password per il tuo account Achei Meu Pet ({username}). Usa il link qui sotto per scegliere una nuova password. Il link scade tra 30 minuti.',
 	'email.reset.cta': 'Reimposta password',
 	'email.reset.ignore': 'Se non hai richiesto tu questa operazione, ignora questa e-mail.',
 
@@ -916,9 +916,9 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.greeting': 'Ciao {name},',
 	'email.reminder.body': '{companion} ha un promemoria in scadenza: {title}',
 	'email.reminder.dueLine': 'Scadenza: {due}',
-	'email.reminder.cta': 'Apri EinVault',
+	'email.reminder.cta': 'Apri Achei Meu Pet',
 	'email.reminder.footer':
-		'Ricevi questa e-mail perché le notifiche dei promemoria sono attive nelle tue impostazioni di EinVault.',
+		'Ricevi questa e-mail perché le notifiche dei promemoria sono attive nelle tue impostazioni di Achei Meu Pet.',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Turno in arrivo: {caretaker}',
@@ -926,7 +926,7 @@ const messages: Record<keyof Messages, string> = {
 	'email.shift.startBody': '{caretaker} inizia un turno di assistenza il {start}.',
 	'email.shift.endBody': '{caretaker} termina un turno di assistenza il {end}.',
 	'email.shift.footer':
-		'Ricevi questa e-mail perché le notifiche dei turni sono attive nelle tue impostazioni di EinVault.',
+		'Ricevi questa e-mail perché le notifiche dei turni sono attive nelle tue impostazioni di Achei Meu Pet.',
 
 	// Search palette
 	'search.placeholder': 'Cerca diari, media, salute, documenti…',
@@ -985,7 +985,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.view': 'Visualizza',
 	'page.documents.delete': 'Elimina',
 	'page.documents.deleteConfirmBody':
-		'Il documento verrà rimosso da EinVault. I documenti Paperless non vengono eliminati da Paperless.',
+		'Il documento verrà rimosso da Achei Meu Pet. I documenti Paperless non vengono eliminati da Paperless.',
 	'page.documents.editTitle': 'Modifica documento',
 	'page.documents.labelTitle': 'Titolo',
 	'page.documents.labelCategory': 'Categoria',

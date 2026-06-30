@@ -202,7 +202,7 @@ const messages: Record<keyof Messages, string> = {
 	'layout.caretaker.notOnShift': 'Pas de garde. Prochaine garde :',
 	'layout.caretaker.noUpcomingShifts': 'Pas de garde. Aucune garde programmée.',
 	'layout.caretaker.requiresActiveShift': 'nécessite une garde active',
-	'layout.caretaker.shiftCalendarEvent': 'Garde EinVault',
+	'layout.caretaker.shiftCalendarEvent': 'Garde Achei Meu Pet',
 
 	// Page: 2FA
 	'page.twofa.title': 'Authentification à deux facteurs',
@@ -269,11 +269,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Récurrence par défaut mise à jour.',
 	'page.settings.notificationsCard': 'Notifications',
 	'page.settings.notificationsDescription':
-		"Recevez des e-mails d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
+		"Recevez des e-mails d'Achei Meu Pet. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
 	'page.settings.notificationsDescriptionNtfy':
-		"Recevez des notifications push d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
+		"Recevez des notifications push d'Achei Meu Pet. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
 	'page.settings.notificationsDescriptionBoth':
-		"Recevez des e-mails et des notifications push d'EinVault. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
+		"Recevez des e-mails et des notifications push d'Achei Meu Pet. Les soignants ne sont notifiés que des rappels des compagnons qui leur sont assignés.",
 	'page.settings.notifyReminderEmailLabel': "M'envoyer un e-mail quand un rappel est dû",
 	'page.settings.notifyShiftEmailLabel':
 		"M'envoyer un e-mail 24 heures avant le début ou la fin d'une garde",
@@ -282,7 +282,7 @@ const messages: Record<keyof Messages, string> = {
 		'Ajoutez une adresse e-mail à votre compte pour recevoir des notifications par e-mail.',
 	'page.settings.ntfyTopicLabel': 'Sujet ntfy',
 	'page.settings.ntfyTopicHint':
-		"Les notifications push couvrent les rappels dus et les alertes de garde pour ce que vous pouvez voir dans EinVault. Elles sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner. Laissez vide pour désactiver les push.",
+		"Les notifications push couvrent les rappels dus et les alertes de garde pour ce que vous pouvez voir dans Achei Meu Pet. Elles sont envoyées à ce sujet sur le serveur ntfy configuré par votre administrateur. Choisissez un nom long et aléatoire ; quiconque le connaît peut s'y abonner. Laissez vide pour désactiver les push.",
 	'page.settings.securityCard': 'Sécurité',
 	'page.settings.twofaOn': "L'authentification à deux facteurs est activée.",
 	'page.settings.twofaOff':
@@ -308,9 +308,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.testSent': 'Notification de test envoyée.',
 	'page.settings.testFailed': 'Échec du test : {error}',
 	'error.testCooldown': "Attendez quelques secondes avant d'envoyer un autre test.",
-	'email.test.subject': 'Notification de test EinVault',
+	'email.test.subject': 'Notification de test Achei Meu Pet',
 	'email.test.body':
-		"Ceci est une notification de test d'EinVault. Si vous lisez ceci, vos réglages de notification fonctionnent.",
+		"Ceci est une notification de test d'Achei Meu Pet. Si vous lisez ceci, vos réglages de notification fonctionnent.",
 
 	// Page: settings (calendar feed)
 	'settings.calendar.title': 'Flux de calendrier',
@@ -448,7 +448,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.sexUnknown': 'Inconnu',
 
 	// Page: companion new
-	'page.companion.new.pageTitle': 'Ajouter un compagnon | EinVault',
+	'page.companion.new.pageTitle': 'Ajouter un compagnon | Achei Meu Pet',
 	'page.companion.new.heading': 'Ajouter un compagnon',
 	'page.companion.new.subheading':
 		'Remplissez ce que vous savez. Vous pourrez toujours modifier plus tard.',
@@ -508,7 +508,7 @@ const messages: Record<keyof Messages, string> = {
 	'overview.allCaughtUp': 'Tout est à jour',
 	'overview.heading.companions': 'Vos compagnons',
 	'overview.companions.addStart': 'Créer un nouveau coffre',
-	'overview.firstRun.title': 'Bienvenue sur EinVault',
+	'overview.firstRun.title': 'Bienvenue sur Achei Meu Pet',
 	'overview.firstRun.body':
 		'Ajoutez votre premier compagnon pour démarrer son carnet de santé, son journal et ses soins quotidiens.',
 	'overview.firstRun.cta': 'Ajouter votre premier compagnon',
@@ -886,7 +886,7 @@ const messages: Record<keyof Messages, string> = {
 	// Aria labels
 	'aria.caretakerNav': 'Navigation gardien',
 	'aria.adminNav': "Sections d'administration",
-	'aria.einvaultHome': 'Accueil EinVault',
+	'aria.einvaultHome': 'Accueil Achei Meu Pet',
 	'aria.goToSignIn': 'Aller à la connexion',
 	'aria.mainNav': 'Navigation principale',
 	'aria.deleteEntry': "Supprimer l'entrée",
@@ -911,10 +911,10 @@ const messages: Record<keyof Messages, string> = {
 	'aria.themeMode': 'Mode {label}',
 
 	// Email: password reset
-	'email.reset.subject': 'Réinitialisez votre mot de passe EinVault',
+	'email.reset.subject': 'Réinitialisez votre mot de passe Achei Meu Pet',
 	'email.reset.greeting': 'Bonjour {name},',
 	'email.reset.body':
-		'Une réinitialisation de mot de passe a été demandée pour votre compte EinVault ({username}). Utilisez le lien ci-dessous pour choisir un nouveau mot de passe. Le lien expire dans 30 minutes.',
+		'Une réinitialisation de mot de passe a été demandée pour votre compte Achei Meu Pet ({username}). Utilisez le lien ci-dessous pour choisir un nouveau mot de passe. Le lien expire dans 30 minutes.',
 	'email.reset.cta': 'Réinitialiser le mot de passe',
 	'email.reset.ignore': "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.",
 
@@ -923,9 +923,9 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.greeting': 'Bonjour {name},',
 	'email.reminder.body': '{companion} a un rappel à échéance : {title}',
 	'email.reminder.dueLine': 'Échéance : {due}',
-	'email.reminder.cta': 'Ouvrir EinVault',
+	'email.reminder.cta': 'Ouvrir Achei Meu Pet',
 	'email.reminder.footer':
-		'Vous recevez cet e-mail car les notifications de rappel sont activées dans vos réglages EinVault.',
+		'Vous recevez cet e-mail car les notifications de rappel sont activées dans vos réglages Achei Meu Pet.',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Garde bientôt commencée : {caretaker}',
@@ -933,7 +933,7 @@ const messages: Record<keyof Messages, string> = {
 	'email.shift.startBody': '{caretaker} commence une garde le {start}.',
 	'email.shift.endBody': '{caretaker} termine une garde le {end}.',
 	'email.shift.footer':
-		'Vous recevez cet e-mail car les notifications de garde sont activées dans vos réglages EinVault.',
+		'Vous recevez cet e-mail car les notifications de garde sont activées dans vos réglages Achei Meu Pet.',
 
 	// Search palette
 	'search.placeholder': 'Rechercher journaux, médias, santé, documents…',
@@ -992,7 +992,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.view': 'Voir',
 	'page.documents.delete': 'Supprimer',
 	'page.documents.deleteConfirmBody':
-		"Ce document sera supprimé d'EinVault. Les documents Paperless ne sont pas supprimés de Paperless.",
+		"Ce document sera supprimé d'Achei Meu Pet. Les documents Paperless ne sont pas supprimés de Paperless.",
 	'page.documents.editTitle': 'Modifier le document',
 	'page.documents.labelTitle': 'Titre',
 	'page.documents.labelCategory': 'Catégorie',

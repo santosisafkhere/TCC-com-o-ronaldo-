@@ -32,7 +32,7 @@ export const users = sqliteTable(
 			.default('system'),
 		locale: text('locale', { enum: ['en', 'it', 'de', 'es', 'fr', 'pt'] })
 			.notNull()
-			.default('en'),
+			.default('pt'),
 		email: text('email'),
 		phone: text('phone'),
 		oidcSubject: text('oidc_subject'),
@@ -165,6 +165,11 @@ export const companions = sqliteTable(
 	'companions',
 	{
 		id: text('id').primaryKey(),
+		// Owner of the pet and its full history. The owner always retains control:
+		// shared parties (e.g. clinics, sitters) get scoped write access via
+		// `companion_caretakers` but never ownership. Nullable only to keep the
+		// migration of pre-ownership installs clean; new pets always set it.
+		ownerId: text('owner_id').references(() => users.id, { onDelete: 'cascade' }),
 		name: text('name').notNull(),
 		species: text('species', { enum: ['dog'] })
 			.notNull()
@@ -198,7 +203,10 @@ export const companions = sqliteTable(
 			.notNull()
 			.default(sql`(unixepoch())`)
 	},
-	(t) => [index('companion_active_idx').on(t.isActive)]
+	(t) => [
+		index('companion_active_idx').on(t.isActive),
+		index('companion_owner_idx').on(t.ownerId)
+	]
 );
 
 // journal
@@ -471,6 +479,28 @@ export const caretakerShifts = sqliteTable(
 	})
 );
 
+// API keys for REST API access
+
+export const apiKeys = sqliteTable(
+	'api_keys',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		keyHash: text('key_hash').notNull(),
+		keyPrefix: text('key_prefix').notNull(),
+		lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(t) => [index('api_key_user_idx').on(t.userId)]
+);
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+
 // type exports
 
 export type User = typeof users.$inferSelect;
@@ -504,11 +534,16 @@ export const notificationOutboxRelations = relations(notificationOutbox, ({ one 
 	user: one(users, { fields: [notificationOutbox.userId], references: [users.id] })
 }));
 
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+	user: one(users, { fields: [apiKeys.userId], references: [users.id] })
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
 	sessions: many(sessions),
 	passwordResetTokens: many(passwordResetTokens),
 	notificationOutbox: many(notificationOutbox),
 	totpBackupCodes: many(totpBackupCodes),
+	apiKeys: many(apiKeys),
 	companionCaretakers: many(companionCaretakers),
 	shifts: many(caretakerShifts),
 	loggedJournalEntries: many(journalEntries, { relationName: 'journalLogger' }),

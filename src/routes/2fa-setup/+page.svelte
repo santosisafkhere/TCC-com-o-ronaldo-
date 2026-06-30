@@ -17,7 +17,7 @@
 </script>
 
 <svelte:head>
-	<title>{t(locale, 'page.twofa.setupRequiredTitle')} | EinVault</title>
+	<title>{t(locale, 'page.twofa.setupRequiredTitle')} | Achei Meu Pet</title>
 </svelte:head>
 
 <AuthBackdrop linkLabel={t(locale, 'aria.goToSignIn')}>

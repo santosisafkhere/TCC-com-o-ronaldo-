@@ -49,6 +49,9 @@ async function visibleCompanions(user: FeedUser, companionIds: string[]) {
 		});
 		const assignedIds = new Set(assigned.map((a) => a.companionId));
 		visible = visible.filter((c) => assignedIds.has(c.id));
+	} else if (user.role !== 'admin') {
+		// Members see only the pets they own; admins are unrestricted.
+		visible = visible.filter((c) => c.ownerId === user.id);
 	}
 	if (companionIds.length > 0) {
 		const want = new Set(companionIds);

@@ -56,7 +56,7 @@
 </script>
 
 <svelte:head>
-	<title>{t(locale, 'page.log.title')} | {data.companion.name} | EinVault</title>
+	<title>{t(locale, 'page.log.title')} | {data.companion.name} | Achei Meu Pet</title>
 </svelte:head>
 
 <div class="space-y-5">

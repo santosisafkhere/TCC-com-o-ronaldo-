@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 import { t, type Locale } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, count, desc } from 'drizzle-orm';
@@ -54,6 +55,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	// members and admins only, caretakers excluded everywhere.
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 	if (locals.user.role === 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
+	await assertCanEditCompanion(locals, params.companionId);
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.companionId),
@@ -81,6 +83,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 	if (locals.user.role === 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
+	await assertCanEditCompanion(locals, params.companionId);
 	const { companionId } = params;
 
 	const companion = await db.query.companions.findFirst({

@@ -264,7 +264,7 @@ test('caretaker sees assigned companion on shift', async ({ world, page }) => {
 	await expect(page).toHaveURL(/\/care/, { timeout: 10_000 });
 
 	// The seeded caretaker (Faye) is assigned to Ein with an active shift.
-	// Use role=heading to avoid matching 'EinVault' in the nav.
+	// Use role=heading to avoid matching 'Achei Meu Pet' in the nav.
 	await expect(
 		page.getByRole('heading', { name: SEED.companions.ein.name, exact: true })
 	).toBeVisible({ timeout: 10_000 });

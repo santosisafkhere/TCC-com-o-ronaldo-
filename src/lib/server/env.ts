@@ -201,9 +201,9 @@ export function logStorageBootStatus(): void {
 
 // Immich integration is a read-only reference layer, NOT a write destination.
 // When configured, users can pick existing assets from their Immich library to
-// attach to journal entries or as a companion avatar. EinVault stores a
+// attach to journal entries or as a companion avatar. Achei Meu Pet stores a
 // reference (provider='immich', storage_key='immich:{assetId}') and proxies
-// reads through the server using the API key. EinVault never uploads to
+// reads through the server using the API key. Achei Meu Pet never uploads to
 // Immich and never deletes Immich assets.
 export interface ImmichConfig {
 	url: string;
@@ -252,16 +252,16 @@ export function logImmichBootStatus(): void {
 
 // Paperless-ngx integration is a read-only reference layer, NOT a write
 // destination — same model as Immich. When configured, users can pick
-// documents from their Paperless library to attach to a companion. EinVault
+// documents from their Paperless library to attach to a companion. Achei Meu Pet
 // stores a reference (provider='paperless', storage_key='paperless:{id}') and
-// proxies reads through the server using the API token. EinVault never
+// proxies reads through the server using the API token. Achei Meu Pet never
 // uploads to or deletes from Paperless.
 export interface PaperlessConfig {
 	url: string;
 	token: string;
 	// Optional tag ID (Paperless tag PK). When set, the picker search AND the
 	// from-paperless import only accept documents carrying this tag. This is
-	// the EinVault-side scope guard; operators should ALSO use a dedicated
+	// the Achei Meu Pet-side scope guard; operators should ALSO use a dedicated
 	// Paperless user whose object permissions are limited to that tag.
 	tagId: number | null;
 }
@@ -340,7 +340,7 @@ export interface SmtpConfig {
 	// Auth is optional: unauthenticated LAN relays are common in homelab setups.
 	user: string | null;
 	pass: string | null;
-	// RFC 5322 From, e.g. 'EinVault <einvault@example.com>'.
+	// RFC 5322 From, e.g. 'Achei Meu Pet <einvault@example.com>'.
 	from: string;
 }
 

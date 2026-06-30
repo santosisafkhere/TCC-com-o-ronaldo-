@@ -238,7 +238,7 @@
 <svelte:window onkeydown={handleWindowKey} />
 
 <svelte:head>
-	<title>{companion.name} | EinVault</title>
+	<title>{companion.name} | Achei Meu Pet</title>
 </svelte:head>
 
 <!-- Avatar lightbox -->

@@ -4,10 +4,12 @@ import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { parseSex, parseWeightUnit } from '$lib/server/validation';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!locals.user) redirect(302, '/auth/login');
 	if (locals.user.role === 'caretaker') redirect(302, '/care');
+	await assertCanEditCompanion(locals, params.id);
 
 	const companion = await db.query.companions.findFirst({
 		where: eq(schema.companions.id, params.id)
@@ -21,6 +23,7 @@ export const actions: Actions = {
 	save: async ({ request, params, locals }) => {
 		if (!locals.user) redirect(302, '/auth/login');
 		if (locals.user.role === 'caretaker') redirect(302, '/care');
+		await assertCanEditCompanion(locals, params.id);
 
 		const companion = await db.query.companions.findFirst({
 			where: eq(schema.companions.id, params.id)

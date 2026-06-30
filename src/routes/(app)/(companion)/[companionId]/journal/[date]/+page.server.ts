@@ -8,6 +8,7 @@ import { parseMood, parseDailyEventType, isValidDate } from '$lib/server/validat
 import { localDateISO } from '$lib/date';
 import { upsertJournalEntry } from '$lib/server/journal';
 import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB } from '$lib/server/env';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -78,6 +79,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 export const actions: Actions = {
 	save: async ({ params, request, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const { companionId, date } = params;
 		if (!isValidDate(date)) return fail(400, { error: t(locals.locale, 'error.invalidDate') });
 
@@ -92,6 +94,7 @@ export const actions: Actions = {
 
 	addActivity: async ({ params, request, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		if (locals.user.role === 'caretaker')
 			return fail(403, { error: t(locals.locale, 'error.forbidden') });
 		const { companionId, date } = params;
@@ -144,6 +147,7 @@ export const actions: Actions = {
 
 	updateActivity: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		if (locals.user.role === 'caretaker')
 			return fail(403, { error: t(locals.locale, 'error.forbidden') });
 		const { companionId } = params;
@@ -174,6 +178,7 @@ export const actions: Actions = {
 
 	deleteActivity: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		if (locals.user.role === 'caretaker')
 			return fail(403, { error: t(locals.locale, 'error.forbidden') });
 		const { companionId } = params;

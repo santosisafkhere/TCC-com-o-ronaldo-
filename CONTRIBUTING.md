@@ -1,6 +1,6 @@
-# Contributing to EinVault
+# Contributing to Achei Meu Pet
 
-EinVault is a small homelab project. The goal is to keep it simple, self-contained, and runnable on your own hardware with no external dependencies. Contributions are welcome, just keep that in mind.
+Achei Meu Pet is a small homelab project. The goal is to keep it simple, self-contained, and runnable on your own hardware with no external dependencies. Contributions are welcome, just keep that in mind.
 
 ## Reporting bugs
 

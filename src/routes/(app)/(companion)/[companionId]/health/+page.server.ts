@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { parseHealthEventType, parseWeightUnit } from '$lib/server/validation';
 import { reminderPrefillUrl } from '$lib/health';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -34,6 +35,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 export const actions: Actions = {
 	addHealth: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { healthError: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const title = String(data.get('title') ?? '').trim();
 		const type = parseHealthEventType(String(data.get('type') ?? ''));
@@ -67,6 +69,7 @@ export const actions: Actions = {
 
 	addWeight: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { weightError: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const weight = parseFloat(String(data.get('weight') ?? ''));
 		const unit = parseWeightUnit(String(data.get('unit') ?? ''));
@@ -93,6 +96,7 @@ export const actions: Actions = {
 
 	updateHealth: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { healthError: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		const title = String(data.get('title') ?? '').trim();
@@ -127,6 +131,7 @@ export const actions: Actions = {
 
 	deleteHealth: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { healthError: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		if (!id) return fail(400, { healthError: t(locals.locale, 'error.missingId') });
@@ -146,6 +151,7 @@ export const actions: Actions = {
 
 	updateWeight: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { weightError: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		const weight = parseFloat(String(data.get('weight') ?? ''));
@@ -178,6 +184,7 @@ export const actions: Actions = {
 
 	deleteWeight: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { weightError: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
 		if (!id) return fail(400, { weightError: t(locals.locale, 'error.missingId') });

@@ -11,7 +11,7 @@ export type { MessageKey };
 export type Locale = 'en' | 'it' | 'de' | 'es' | 'fr' | 'pt';
 
 export const SUPPORTED_LOCALES: Locale[] = ['de', 'en', 'es', 'fr', 'it', 'pt'];
-export const DEFAULT_LOCALE: Locale = 'en';
+export const DEFAULT_LOCALE: Locale = 'pt';
 export const LOCALE_LABELS: Record<Locale, string> = {
 	en: 'English',
 	it: 'Italiano',
@@ -55,7 +55,11 @@ export function parseAcceptLanguage(header: string | null): Locale {
 
 	for (const { lang } of entries) {
 		const resolved = resolveLocale(lang);
-		if (resolved !== DEFAULT_LOCALE || lang.toLowerCase().startsWith('en')) return resolved;
+		// Take the first entry that maps to a non-default locale, or that explicitly
+		// requests the default locale itself (so an unsupported language falling back
+		// to the default doesn't short-circuit a later supported entry).
+		const prefix = lang.toLowerCase().split('-')[0];
+		if (resolved !== DEFAULT_LOCALE || prefix === DEFAULT_LOCALE) return resolved;
 	}
 	return DEFAULT_LOCALE;
 }

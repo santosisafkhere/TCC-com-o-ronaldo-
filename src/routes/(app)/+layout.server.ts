@@ -15,13 +15,18 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		redirect(302, '/care');
 	}
 
+	// Ownership isolation: members see only the pets they own; admins (platform
+	// operators) see all. Caretakers never reach this layout (redirected above).
+	const ownerFilter =
+		locals.user.role === 'admin' ? undefined : eq(schema.companions.ownerId, locals.user.id);
+
 	const [companions, archivedCompanions] = await Promise.all([
 		db.query.companions.findMany({
-			where: eq(schema.companions.isActive, true),
+			where: and(eq(schema.companions.isActive, true), ownerFilter),
 			orderBy: (c, { asc }) => [asc(c.name)]
 		}),
 		db.query.companions.findMany({
-			where: eq(schema.companions.isActive, false),
+			where: and(eq(schema.companions.isActive, false), ownerFilter),
 			orderBy: (c, { desc }) => [desc(c.archivedAt)]
 		})
 	]);

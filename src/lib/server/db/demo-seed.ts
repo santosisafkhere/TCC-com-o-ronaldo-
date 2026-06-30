@@ -210,7 +210,10 @@ export function seedContent(
 	const faye = SEED.caretaker.id;
 
 	db.insert(schema.companions)
-		.values([{ ...SEED.companions.ein }, { ...SEED.companions.edward }])
+		.values([
+			{ ...SEED.companions.ein, ownerId: jet },
+			{ ...SEED.companions.edward, ownerId: jet }
+		])
 		.run();
 
 	db.insert(schema.companionCaretakers).values({ companionId: ein, userId: faye }).run();

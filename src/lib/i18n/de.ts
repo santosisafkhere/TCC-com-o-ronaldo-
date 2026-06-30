@@ -204,7 +204,7 @@ const messages: Record<keyof Messages, string> = {
 	'layout.caretaker.notOnShift': 'Nicht im Dienst. Nächste Schicht:',
 	'layout.caretaker.noUpcomingShifts': 'Nicht im Dienst. Keine Schichten geplant.',
 	'layout.caretaker.requiresActiveShift': 'erfordert aktive Schicht',
-	'layout.caretaker.shiftCalendarEvent': 'EinVault Schicht',
+	'layout.caretaker.shiftCalendarEvent': 'Achei Meu Pet Schicht',
 
 	// Page: 2FA
 	'page.twofa.title': 'Zwei-Faktor-Authentifizierung',
@@ -271,11 +271,11 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.defaultRecurrenceUpdated': '✓ Standard-Wiederholung aktualisiert.',
 	'page.settings.notificationsCard': 'Benachrichtigungen',
 	'page.settings.notificationsDescription':
-		'Erhalte E-Mails von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+		'Erhalte E-Mails von Achei Meu Pet. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
 	'page.settings.notificationsDescriptionNtfy':
-		'Erhalte Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+		'Erhalte Push-Benachrichtigungen von Achei Meu Pet. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
 	'page.settings.notificationsDescriptionBoth':
-		'Erhalte E-Mails und Push-Benachrichtigungen von EinVault. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
+		'Erhalte E-Mails und Push-Benachrichtigungen von Achei Meu Pet. Betreuer werden nur über Erinnerungen für zugewiesene Gefährten benachrichtigt.',
 	'page.settings.notifyReminderEmailLabel': 'E-Mail senden, wenn eine Erinnerung fällig ist',
 	'page.settings.notifyShiftEmailLabel':
 		'E-Mail senden, 24 Stunden bevor eine Schicht beginnt oder endet',
@@ -284,7 +284,7 @@ const messages: Record<keyof Messages, string> = {
 		'Füge deinem Konto eine E-Mail-Adresse hinzu, um E-Mail-Benachrichtigungen zu erhalten.',
 	'page.settings.ntfyTopicLabel': 'ntfy-Thema',
 	'page.settings.ntfyTopicHint':
-		'Push-Nachrichten umfassen fällige Erinnerungen und Schichtmeldungen für das, was du in EinVault sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
+		'Push-Nachrichten umfassen fällige Erinnerungen und Schichtmeldungen für das, was du in Achei Meu Pet sehen kannst. Sie gehen an dieses Thema auf dem vom Admin konfigurierten ntfy-Server. Wähle einen langen zufälligen Namen; jeder, der ihn kennt, kann ihn abonnieren. Leer lassen, um Push zu deaktivieren.',
 	'page.settings.securityCard': 'Sicherheit',
 	'page.settings.twofaOn': 'Zwei-Faktor-Authentifizierung ist aktiv.',
 	'page.settings.twofaOff':
@@ -310,9 +310,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.settings.testSent': 'Testbenachrichtigung gesendet.',
 	'page.settings.testFailed': 'Test fehlgeschlagen: {error}',
 	'error.testCooldown': 'Warte ein paar Sekunden, bevor du einen weiteren Test sendest.',
-	'email.test.subject': 'EinVault-Testbenachrichtigung',
+	'email.test.subject': 'Achei Meu Pet-Testbenachrichtigung',
 	'email.test.body':
-		'Dies ist eine Testbenachrichtigung von EinVault. Wenn du das liest, funktionieren deine Benachrichtigungseinstellungen.',
+		'Dies ist eine Testbenachrichtigung von Achei Meu Pet. Wenn du das liest, funktionieren deine Benachrichtigungseinstellungen.',
 
 	// Page: settings (calendar feed)
 	'settings.calendar.title': 'Kalender-Feed',
@@ -449,7 +449,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.sexUnknown': 'Unbekannt',
 
 	// Page: companion new
-	'page.companion.new.pageTitle': 'Begleiter hinzufügen | EinVault',
+	'page.companion.new.pageTitle': 'Begleiter hinzufügen | Achei Meu Pet',
 	'page.companion.new.heading': 'Begleiter hinzufügen',
 	'page.companion.new.subheading': 'Fülle aus, was du weißt. Du kannst später immer noch ändern.',
 	'page.companion.new.submit': 'Begleiter hinzufügen',
@@ -508,7 +508,7 @@ const messages: Record<keyof Messages, string> = {
 	'overview.allCaughtUp': 'Alles erledigt',
 	'overview.heading.companions': 'Deine Begleiter',
 	'overview.companions.addStart': 'Neues Tresor starten',
-	'overview.firstRun.title': 'Willkommen bei EinVault',
+	'overview.firstRun.title': 'Willkommen bei Achei Meu Pet',
 	'overview.firstRun.body':
 		'Füge deinen ersten Begleiter hinzu, um Gesundheitsakte, Tagebuch und tägliche Pflege zu beginnen.',
 	'overview.firstRun.cta': 'Ersten Begleiter hinzufügen',
@@ -885,7 +885,7 @@ const messages: Record<keyof Messages, string> = {
 	// Aria labels
 	'aria.caretakerNav': 'Betreuer-Navigation',
 	'aria.adminNav': 'Verwaltungsbereiche',
-	'aria.einvaultHome': 'EinVault Startseite',
+	'aria.einvaultHome': 'Achei Meu Pet Startseite',
 	'aria.goToSignIn': 'Zur Anmeldung',
 	'aria.mainNav': 'Hauptnavigation',
 	'aria.deleteEntry': 'Eintrag löschen',
@@ -910,10 +910,10 @@ const messages: Record<keyof Messages, string> = {
 	'aria.themeMode': '{label}-Modus',
 
 	// Email: password reset
-	'email.reset.subject': 'Setze dein EinVault-Passwort zurück',
+	'email.reset.subject': 'Setze dein Achei Meu Pet-Passwort zurück',
 	'email.reset.greeting': 'Hallo {name},',
 	'email.reset.body':
-		'Für dein EinVault-Konto ({username}) wurde ein Zurücksetzen des Passworts angefordert. Nutze den folgenden Link, um ein neues Passwort zu wählen. Der Link läuft in 30 Minuten ab.',
+		'Für dein Achei Meu Pet-Konto ({username}) wurde ein Zurücksetzen des Passworts angefordert. Nutze den folgenden Link, um ein neues Passwort zu wählen. Der Link läuft in 30 Minuten ab.',
 	'email.reset.cta': 'Passwort zurücksetzen',
 	'email.reset.ignore': 'Falls du das nicht angefordert hast, kannst du diese E-Mail ignorieren.',
 
@@ -922,9 +922,9 @@ const messages: Record<keyof Messages, string> = {
 	'email.reminder.greeting': 'Hallo {name},',
 	'email.reminder.body': 'Für {companion} ist eine Erinnerung fällig: {title}',
 	'email.reminder.dueLine': 'Fällig: {due}',
-	'email.reminder.cta': 'EinVault öffnen',
+	'email.reminder.cta': 'Achei Meu Pet öffnen',
 	'email.reminder.footer':
-		'Du erhältst diese E-Mail, weil Erinnerungs-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
+		'Du erhältst diese E-Mail, weil Erinnerungs-Benachrichtigungen in deinen Achei Meu Pet-Einstellungen aktiviert sind.',
 
 	// Email: caretaker shift alerts
 	'email.shift.startSubject': 'Schicht beginnt bald: {caretaker}',
@@ -932,7 +932,7 @@ const messages: Record<keyof Messages, string> = {
 	'email.shift.startBody': '{caretaker} beginnt eine Betreuungsschicht am {start}.',
 	'email.shift.endBody': '{caretaker} beendet eine Betreuungsschicht am {end}.',
 	'email.shift.footer':
-		'Du erhältst diese E-Mail, weil Schicht-Benachrichtigungen in deinen EinVault-Einstellungen aktiviert sind.',
+		'Du erhältst diese E-Mail, weil Schicht-Benachrichtigungen in deinen Achei Meu Pet-Einstellungen aktiviert sind.',
 
 	// Search palette
 	'search.placeholder': 'Tagebücher, Medien, Gesundheit, Dokumente durchsuchen…',
@@ -991,7 +991,7 @@ const messages: Record<keyof Messages, string> = {
 	'page.documents.view': 'Ansehen',
 	'page.documents.delete': 'Löschen',
 	'page.documents.deleteConfirmBody':
-		'Das Dokument wird aus EinVault entfernt. Paperless-Dokumente werden nicht aus Paperless gelöscht.',
+		'Das Dokument wird aus Achei Meu Pet entfernt. Paperless-Dokumente werden nicht aus Paperless gelöscht.',
 	'page.documents.editTitle': 'Dokument bearbeiten',
 	'page.documents.labelTitle': 'Titel',
 	'page.documents.labelCategory': 'Kategorie',

@@ -15,8 +15,8 @@ async function seed() {
 		.insert(schema.users)
 		.values({ id: 'm1', username: 'm1', displayName: 'M', role: 'member' });
 	await db.insert(schema.companions).values([
-		{ id: 'c-active', name: 'Active', isActive: true },
-		{ id: 'c-arch', name: 'Archived', isActive: false }
+		{ id: 'c-active', name: 'Active', isActive: true, ownerId: 'm1' },
+		{ id: 'c-arch', name: 'Archived', isActive: false, ownerId: 'm1' }
 	]);
 	await db.insert(schema.healthEvents).values([
 		{

@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
@@ -15,6 +16,7 @@ type Category = (typeof CATEGORIES)[number];
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 	if (locals.user.role === 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
+	await assertCanEditCompanion(locals, params.companionId);
 
 	const client = getPaperlessClient();
 	if (!client || !PAPERLESS_CONFIG) error(404, t(locals.locale, 'error.notFound'));

@@ -1,13 +1,13 @@
 <p align="center">
-  <img src="docs/ein.svg" alt="Ein, the EinVault mascot" width="120" />
+  <img src="docs/ein.svg" alt="Ein, the Achei Meu Pet mascot" width="120" />
 </p>
 
-# EinVault
+# Achei Meu Pet
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.6-7348f4.svg)](https://github.com/davefatkin/EinVault/releases)
+[![Version](https://img.shields.io/badge/version-1.0.6-7348f4.svg)](https://github.com/davefatkin/Achei Meu Pet/releases)
 
-EinVault is a private, self-hosted companion health and care tracker built for homelabs. Track health records, daily activities, and care schedules for your animal companions. All data stays on your hardware. No cloud, no telemetry, no external accounts.
+Achei Meu Pet is a private, self-hosted companion health and care tracker built for homelabs. Track health records, daily activities, and care schedules for your animal companions. All data stays on your hardware. No cloud, no telemetry, no external accounts.
 
 Want a look before you self-host? There's a read-only demo at **[demo.einvault.app](https://demo.einvault.app)**. Pick a role and explore; nothing you do there sticks.
 
@@ -61,7 +61,7 @@ Want a look before you self-host? There's a read-only demo at **[demo.einvault.a
 
 ## Screenshots
 
-![EinVault dashboard](docs/screenshots/member_dashboard_hybrid.png)
+![Achei Meu Pet dashboard](docs/screenshots/member_dashboard_hybrid.png)
 
 ### Companion overview
 
@@ -144,7 +144,7 @@ Set `VIDEO_TRANSCODE=true` to convert each uploaded video to a universal web pro
 
 Transcoding decodes attacker-supplied media with `ffmpeg`. The shipped compose files already run the container with a read-only root filesystem, all capabilities dropped, and `no-new-privileges`, which contains a decoder exploit. For extra isolation you can run the container without network access.
 
-Transcoding is the only CPU-heavy thing EinVault does. It runs one job at a time with `ffmpeg` capped at two threads, so it never grabs the whole host, but the default `cpus: 0.5` / `memory: 256M` limits in `docker-compose.prod.yml` are sized for the app alone and are too low once it is enabled. With transcoding on, raise them to roughly `cpus: 1.5` (use `1.0` on a small host, `2.0` for the fastest conversions) and `memory: 512M` (`1G` if you allow large or 4K clips). The memory bump matters most: the worker buffers the whole clip while converting, and too low a limit will OOM-kill the job rather than slow it down.
+Transcoding is the only CPU-heavy thing Achei Meu Pet does. It runs one job at a time with `ffmpeg` capped at two threads, so it never grabs the whole host, but the default `cpus: 0.5` / `memory: 256M` limits in `docker-compose.prod.yml` are sized for the app alone and are too low once it is enabled. With transcoding on, raise them to roughly `cpus: 1.5` (use `1.0` on a small host, `2.0` for the fastest conversions) and `memory: 512M` (`1G` if you allow large or 4K clips). The memory bump matters most: the worker buffers the whole clip while converting, and too low a limit will OOM-kill the job rather than slow it down.
 
 ### External image storage (optional)
 
@@ -165,7 +165,7 @@ Downloads use short-lived presigned URLs (the app issues a 302 redirect). Access
 
 ### Immich integration (optional)
 
-When `IMMICH_URL` and `IMMICH_API_KEY` are set, members and admins get a "Pick from Immich" option on the journal photo and companion avatar flows. The chosen asset stays in Immich; EinVault stores only a reference and proxies reads through the server using the API key. EinVault never uploads to Immich and never deletes assets from it. Caretakers cannot use the picker.
+When `IMMICH_URL` and `IMMICH_API_KEY` are set, members and admins get a "Pick from Immich" option on the journal photo and companion avatar flows. The chosen asset stays in Immich; Achei Meu Pet stores only a reference and proxies reads through the server using the API key. Achei Meu Pet never uploads to Immich and never deletes assets from it. Caretakers cannot use the picker.
 
 |                   | Default | Description                                                                                                                                                                                  |
 | ----------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -179,7 +179,7 @@ Each companion has a Documents tab for receipts, invoices, vaccination records, 
 
 ### Paperless-ngx integration (optional)
 
-When `PAPERLESS_URL` and `PAPERLESS_API_TOKEN` are set, members and admins get an "Add from Paperless" option on the Documents tab that searches a [Paperless-ngx](https://docs.paperless-ngx.com/) instance and attaches a document by reference. The document stays in Paperless; EinVault stores only a reference and proxies reads through the server using the token. EinVault never uploads to or deletes from Paperless. Caretakers cannot use the picker. EinVault serves the archived (OCR'd PDF) version of each referenced document.
+When `PAPERLESS_URL` and `PAPERLESS_API_TOKEN` are set, members and admins get an "Add from Paperless" option on the Documents tab that searches a [Paperless-ngx](https://docs.paperless-ngx.com/) instance and attaches a document by reference. The document stays in Paperless; Achei Meu Pet stores only a reference and proxies reads through the server using the token. Achei Meu Pet never uploads to or deletes from Paperless. Caretakers cannot use the picker. Achei Meu Pet serves the archived (OCR'd PDF) version of each referenced document.
 
 The token can read every document its Paperless user can see, and any member can then search and attach them. Set `PAPERLESS_TAG_ID` to limit the picker and import to one tag, and use a dedicated Paperless user whose object permissions are restricted to that tag.
 
@@ -191,7 +191,7 @@ The token can read every document its Paperless user can see, and any member can
 
 ### SMTP email (optional)
 
-When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email and adds a self-service "Forgot password?" link on the login page. When SMTP is configured, users can also opt in (Settings -> Notifications) to an email when a reminder comes due, and to an email 24 hours before a caretaker shift starts or ends. Caretakers only receive reminder emails for companions assigned to them, and shift emails for their own shifts. Both variables must be set together; setting only one disables email and logs a warning at startup.
+When `SMTP_HOST` and `SMTP_FROM` are both set, Achei Meu Pet enables outbound email and adds a self-service "Forgot password?" link on the login page. When SMTP is configured, users can also opt in (Settings -> Notifications) to an email when a reminder comes due, and to an email 24 hours before a caretaker shift starts or ends. Caretakers only receive reminder emails for companions assigned to them, and shift emails for their own shifts. Both variables must be set together; setting only one disables email and logs a warning at startup.
 
 `ORIGIN` must be set correctly: password reset links are built from it. Behind a reverse proxy, make sure `ORIGIN` matches the public URL users see.
 
@@ -202,11 +202,11 @@ When `SMTP_HOST` and `SMTP_FROM` are both set, EinVault enables outbound email a
 | `SMTP_SECURE` | `false` | `true` = implicit TLS (port 465). `false` = STARTTLS upgrade on connect.                                                        |
 | `SMTP_USER`   | —       | SMTP username. Leave unset for unauthenticated relays.                                                                          |
 | `SMTP_PASS`   | —       | SMTP password. Leave unset for unauthenticated relays.                                                                          |
-| `SMTP_FROM`   | —       | RFC 5322 From address shown to recipients, e.g. `EinVault <einvault@example.com>`. Required (with `SMTP_HOST`) to enable email. |
+| `SMTP_FROM`   | —       | RFC 5322 From address shown to recipients, e.g. `Achei Meu Pet <einvault@example.com>`. Required (with `SMTP_HOST`) to enable email. |
 
 ### ntfy push notifications (optional)
 
-When `NTFY_URL` is set, EinVault can publish push notifications via [ntfy](https://ntfy.sh). This configures the server only (base URL and optional access token). Each user sets their own topic name under Settings -> Notifications; a non-empty topic is that user's opt-in for pushes scoped to what they can see in the app (reminders due, shift alerts). The notification scheduler runs when either SMTP or ntfy is configured. The forgot-password flow remains email-only.
+When `NTFY_URL` is set, Achei Meu Pet can publish push notifications via [ntfy](https://ntfy.sh). This configures the server only (base URL and optional access token). Each user sets their own topic name under Settings -> Notifications; a non-empty topic is that user's opt-in for pushes scoped to what they can see in the app (reminders due, shift alerts). The notification scheduler runs when either SMTP or ntfy is configured. The forgot-password flow remains email-only.
 
 On public servers like ntfy.sh, the topic name is the only access control. Users should pick long, random topic names that are hard to guess.
 
@@ -278,7 +278,7 @@ For tag selection:
 
 ## Docker (local build)
 
-Builds the image locally instead of pulling from GHCR. Useful for testing Dockerfile changes or working on EinVault itself:
+Builds the image locally instead of pulling from GHCR. Useful for testing Dockerfile changes or working on Achei Meu Pet itself:
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d --build
@@ -349,7 +349,7 @@ CI runs lint, type checks, unit tests, and the e2e suite (sharded four ways) on 
 
 ## OIDC / SSO (optional)
 
-EinVault supports OpenID Connect for SSO with providers like Authelia, Authentik, Keycloak, and PocketID. OIDC runs alongside password login; existing users keep their passwords. A "Sign in with {provider}" button appears on the login page when OIDC is configured.
+Achei Meu Pet supports OpenID Connect for SSO with providers like Authelia, Authentik, Keycloak, and PocketID. OIDC runs alongside password login; existing users keep their passwords. A "Sign in with {provider}" button appears on the login page when OIDC is configured.
 
 OIDC is **disabled** unless all required variables are set. Add them to your `.env` (local) or compose file (production), then restart.
 
@@ -386,13 +386,13 @@ The callback decides which account to use in this order:
 3. **Auto-create.** Only if `OIDC_ALLOW_SIGNUP=true`. Username taken from `preferred_username` claim (sanitised, with numeric suffix on collision), or email local-part as fallback.
 4. **Reject.** Otherwise, the user is returned to the login page with an "account not provisioned" message. An admin must create the account first.
 
-By default (`OIDC_ALLOW_SIGNUP=false`), users must already exist in EinVault, or share an email with an existing account, to log in.
+By default (`OIDC_ALLOW_SIGNUP=false`), users must already exist in Achei Meu Pet, or share an email with an existing account, to log in.
 
 ### Admin role mapping
 
 If `OIDC_ADMIN_GROUPS` is set, the user's `groups` claim is checked on **every** login. Membership in any listed group sets the user's role to `admin`; absence demotes them to the default role. Revoking admin at the IdP takes effect on next login.
 
-If `OIDC_ADMIN_GROUPS` is unset, OIDC does not touch user roles. Roles set in EinVault's admin UI are preserved across SSO logins.
+If `OIDC_ADMIN_GROUPS` is unset, OIDC does not touch user roles. Roles set in Achei Meu Pet's admin UI are preserved across SSO logins.
 
 `OIDC_DEFAULT_ROLE` cannot grant admin; allowed values are `member` and `caretaker`.
 
@@ -400,7 +400,7 @@ Group membership is read from the top-level `groups` claim in the ID token, as a
 
 ### Logout
 
-By default, logout destroys the local EinVault session and returns the user to `/auth/login`. Set `OIDC_POST_LOGOUT_REDIRECT_URI` (and register it with your IdP) to also end the IdP session via [RP-initiated logout](https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
+By default, logout destroys the local Achei Meu Pet session and returns the user to `/auth/login`. Set `OIDC_POST_LOGOUT_REDIRECT_URI` (and register it with your IdP) to also end the IdP session via [RP-initiated logout](https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
 
 ### Provider notes
 
@@ -408,14 +408,14 @@ By default, logout destroys the local EinVault session and returns the user to `
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Authelia**  | Register the redirect URI under the OIDC client config. Set `client_secret_basic` (default) or `none` for public clients.                                                                           |
 | **Authentik** | Create an OAuth2/OIDC provider; scope mapping for `groups` is built-in. `OIDC_ADMIN_GROUPS` matches the `groups` claim directly.                                                                    |
-| **Keycloak**  | Add a "Group Membership" mapper to the client with token claim name `groups` and "Full group path" off. EinVault does not read `realm_access.roles`. Add the redirect URI to "Valid Redirect URIs". |
+| **Keycloak**  | Add a "Group Membership" mapper to the client with token claim name `groups` and "Full group path" off. Achei Meu Pet does not read `realm_access.roles`. Add the redirect URI to "Valid Redirect URIs". |
 | **PocketID**  | Public-client first; omit `OIDC_CLIENT_SECRET`. Register the redirect URI in the client settings.                                                                                                   |
 
 ---
 
 ## Two-factor authentication (2FA)
 
-EinVault supports per-user TOTP-based two-factor authentication. Users can enable it under Settings → Security: scan the QR code with any TOTP app (Aegis, Bitwarden Authenticator, Google Authenticator, etc.), enter the confirmation code, and download the 10 one-time backup codes. Each backup code works once and is not shown again.
+Achei Meu Pet supports per-user TOTP-based two-factor authentication. Users can enable it under Settings → Security: scan the QR code with any TOTP app (Aegis, Bitwarden Authenticator, Google Authenticator, etc.), enter the confirmation code, and download the 10 one-time backup codes. Each backup code works once and is not shown again.
 
 **Requirements.** 2FA requires `TWOFA_ENC_KEY` to be set. This is a 32-byte base64 key used to encrypt stored TOTP secrets at rest. Without it, 2FA is unavailable and the enforcement setting in the admin panel is locked.
 

@@ -2,13 +2,13 @@
 
 ## Supported versions
 
-EinVault is a self-hosted application with a single supported release line: the latest tagged version on `main`. Older versions do not receive backported fixes.
+Achei Meu Pet is a self-hosted application with a single supported release line: the latest tagged version on `main`. Older versions do not receive backported fixes.
 
 ## Reporting a vulnerability
 
-Please report suspected vulnerabilities privately via GitHub's "Report a vulnerability" form on the repository's Security tab (<https://github.com/davefatkin/EinVault/security/advisories/new>).
+Please report suspected vulnerabilities privately via GitHub's "Report a vulnerability" form on the repository's Security tab (<https://github.com/davefatkin/Achei Meu Pet/security/advisories/new>).
 
-If you cannot use GitHub Security Advisories, email the maintainer at <security@einvault.com> with the subject prefix `[EinVault security]`.
+If you cannot use GitHub Security Advisories, email the maintainer at <security@einvault.com> with the subject prefix `[Achei Meu Pet security]`.
 
 Please include:
 
@@ -45,7 +45,7 @@ Using the [GitHub CLI](https://cli.github.com/) (`gh` 2.49 or later):
 
 ```bash
 gh attestation verify oci://ghcr.io/davefatkin/einvault:vX.Y.Z \
-    --repo davefatkin/EinVault
+    --repo davefatkin/Achei Meu Pet
 ```
 
 The `gh attestation verify` command accepts a tag (`:vX.Y.Z`, `:latest`) or a digest reference (`@sha256:...`).

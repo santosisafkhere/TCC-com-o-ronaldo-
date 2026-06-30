@@ -1,4 +1,4 @@
-# EinVault — Production
+# Achei Meu Pet — Production
 # https://github.com/davefatkin/einvault
 #
 # 1. Edit ORIGIN below to match your domain
@@ -20,7 +20,7 @@ services:
     user: '1000:1000'
 
     environment:
-      # Your public URL — must match the address you access EinVault from.
+      # Your public URL — must match the address you access Achei Meu Pet from.
       # Used for CSRF protection; the app will reject form submissions without it.
       ORIGIN: https://einvault.yourdomain.com
 
@@ -78,7 +78,7 @@ services:
 
       # Optional: Immich integration (reference mode)
       # When set, users can attach existing Immich assets to journal entries
-      # and avatars. EinVault stores a reference and proxies reads through
+      # and avatars. Achei Meu Pet stores a reference and proxies reads through
       # the API key; it never uploads or deletes from Immich.
       # IMMICH_URL: http://immich.local:2283
       # IMMICH_API_KEY:
@@ -87,7 +87,7 @@ services:
 
       # Optional: Paperless-ngx document import (reference mode)
       # When set, members and admins can attach Paperless documents to a
-      # companion. EinVault stores a reference and proxies reads through the
+      # companion. Achei Meu Pet stores a reference and proxies reads through the
       # token; it never uploads or deletes from Paperless. Both URL and token
       # must be set together.
       # PAPERLESS_URL: http://paperless.local:8000
@@ -106,7 +106,7 @@ services:
       # Leave unset for unauthenticated LAN relays.
       # SMTP_USER:
       # SMTP_PASS:
-      # SMTP_FROM: 'EinVault <einvault@example.com>'
+      # SMTP_FROM: 'Achei Meu Pet <einvault@example.com>'
 
       # Optional: ntfy push notifications
       # Configures the ntfy server only; each user sets their own topic under

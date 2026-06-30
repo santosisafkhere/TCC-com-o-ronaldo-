@@ -6,6 +6,7 @@ import { localDateISO } from '$lib/date';
 import { completeReminder } from '$lib/server/reminders';
 import { t } from '$lib/i18n';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_EVENT_LIMIT = 30;
@@ -85,6 +86,7 @@ export const actions: Actions = {
 			where: eq(schema.reminders.id, id)
 		});
 		if (!reminder) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
+		await assertCanEditCompanion(locals, reminder.companionId);
 
 		const companion = await db.query.companions.findFirst({
 			where: and(

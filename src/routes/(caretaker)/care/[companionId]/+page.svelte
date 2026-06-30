@@ -162,7 +162,7 @@
 <svelte:window onkeydown={handleWindowKey} />
 
 <svelte:head>
-	<title>{companion.name} | Caretaker | EinVault</title>
+	<title>{companion.name} | Caretaker | Achei Meu Pet</title>
 </svelte:head>
 
 <!-- Avatar lightbox -->

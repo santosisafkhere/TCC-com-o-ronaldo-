@@ -248,7 +248,7 @@
 </script>
 
 <svelte:head>
-	<title>{t(locale, 'overview.title')} | EinVault</title>
+	<title>{t(locale, 'overview.title')} | Achei Meu Pet</title>
 </svelte:head>
 
 <svelte:window onkeydown={handleOverviewWindowKey} />

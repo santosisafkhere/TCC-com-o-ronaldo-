@@ -6,6 +6,7 @@ import { eq, gte, and, lte, isNull } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { completeReminder } from '$lib/server/reminders';
 import { healthEventPrefillUrl, REMINDER_TO_HEALTH_TYPE } from '$lib/health';
+import { assertCanEditCompanion } from '$lib/server/permissions';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	if (!locals.user) redirect(302, '/auth/login');
@@ -100,6 +101,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 export const actions: Actions = {
 	complete: async ({ request, params, locals }) => {
 		if (!locals.user) return fail(401, { error: t(locals.locale, 'error.unauthorized') });
+		await assertCanEditCompanion(locals, params.companionId);
 
 		const data = await request.formData();
 		const id = String(data.get('id') ?? '');
