@@ -30,6 +30,7 @@
 		"@types/node": "^25.9.0",
 		"@types/nodemailer": "^8.0.0",
 		"@types/qrcode": "^1.5.6",
+		"@types/sanitize-html": "^2.16.2",
 		"@types/smtp-server": "^3.5.13",
 		"@typescript-eslint/parser": "^8.57.2",
 		"drizzle-kit": "^0.31.10",
@@ -65,7 +66,6 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"drizzle-orm": "^0.45.2",
-		"isomorphic-dompurify": "^3.9.0",
 		"marked": "^18.0.3",
 		"nodemailer": "^9.0.1",
 		"openid-client": "^6.8.4",
@@ -73,6 +73,7 @@
 		"pdfjs-dist": "^6.0.227",
 		"postgres": "^4.1.1",
 		"qrcode": "^1.5.4",
+		"sanitize-html": "^2.18.2",
 		"sharp": "^0.35.1",
 		"tailwind-merge": "^3.5.0"
 	},

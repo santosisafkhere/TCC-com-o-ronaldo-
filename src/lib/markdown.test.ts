@@ -44,6 +44,27 @@ describe('renderMarkdown', () => {
 		expect(html).not.toContain('<iframe');
 	});
 
+	it('neutralizes encoded and alternative dangerous schemes', () => {
+		for (const src of [
+			'[x](java&#115;cript:alert(1))',
+			'[x](&#x6A;avascript:alert(1))',
+			'[x]( javascript:alert(1))',
+			'[x](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==)',
+			'[x](vbscript:msgbox(1))',
+			'[x](//evil.example/x)'
+		]) {
+			const html = renderMarkdown(src).toLowerCase();
+			expect(html, src).not.toMatch(/href="\s*(javascript|data|vbscript):/);
+			expect(html, src).not.toContain('href="//');
+		}
+	});
+
+	it('keeps mailto links', () => {
+		expect(renderMarkdown('[mail](mailto:vet@example.com)')).toContain(
+			'href="mailto:vet@example.com"'
+		);
+	});
+
 	it('blocks data attributes', () => {
 		const html = renderMarkdown('<p data-evil="1">x</p>');
 		expect(html).not.toContain('data-evil');

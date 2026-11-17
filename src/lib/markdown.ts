@@ -1,7 +1,9 @@
 import { marked } from 'marked';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 
-// Strip all HTML and dangerous URI schemes; DOMPurify is the final safety net.
+// Strip all HTML and dangerous URI schemes; sanitize-html is the final safety
+// net. (It is a pure-JS parser: unlike DOMPurify on the server it needs no
+// jsdom, whose ESM-only dependencies fail to load in Vercel functions.)
 marked.use({
 	renderer: {
 		html() {
@@ -42,10 +44,14 @@ export function renderMarkdown(text: string): string {
 	// `breaks: true` turns single newlines into <br> so users' line breaks in
 	// journal/notes show up as written (CommonMark would otherwise collapse them).
 	const raw = marked.parse(text, { async: false, gfm: true, breaks: true }) as string;
-	return DOMPurify.sanitize(raw, {
-		ALLOWED_TAGS,
-		ALLOWED_ATTR: ['href', 'rel'],
-		ALLOW_DATA_ATTR: false,
-		FORCE_BODY: false
+	return sanitizeHtml(raw, {
+		allowedTags: ALLOWED_TAGS,
+		allowedAttributes: { a: ['href', 'rel'] },
+		// Anything else (javascript:, data:, vbscript:…) loses its href.
+		allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+		allowProtocolRelative: false,
+		// Disallowed tags are dropped but their text is kept, except these,
+		// whose content must never surface as text.
+		nonTextTags: ['script', 'style', 'textarea', 'option', 'noscript', 'iframe']
 	});
 }
