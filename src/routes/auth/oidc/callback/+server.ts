@@ -208,6 +208,8 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 			email: insertEmail,
 			oidcSubject: sub,
 			oidcIssuer: iss,
+			// Start in the language of the browser that signed in.
+			locale,
 			lastLoginAt: new Date()
 		});
 

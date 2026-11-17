@@ -2,6 +2,7 @@ import type { Messages } from './en';
 
 const messages: Record<keyof Messages, string> = {
 	// Common
+	'common.uploadsUnavailable': 'Foto- und Datei-Uploads sind derzeit nicht verfügbar.',
 	'common.save': 'Speichern',
 	'common.saving': 'Speichern…',
 	'common.saved': 'Gespeichert.',
@@ -100,6 +101,7 @@ const messages: Record<keyof Messages, string> = {
 		'Benutzernamen brauchen 3–32 Zeichen: Buchstaben, Ziffern, - oder _.',
 	'error.usernameTaken': 'Dieser Benutzername ist bereits vergeben.',
 	'error.invalidEmail': 'Gib eine gültige E-Mail ein oder lass das Feld leer.',
+	'error.uploadsUnavailable': 'Datei-Uploads sind auf diesem Server noch nicht aktiviert.',
 	'error.emailAlreadyTaken': 'Diese E-Mail-Adresse wird bereits verwendet.',
 	'error.emailRequired': 'E-Mail-Adresse ist erforderlich.',
 	'error.emailInvalid': 'Gib eine gültige E-Mail-Adresse ein.',
@@ -176,6 +178,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.maxDocumentsExceeded': 'Dokumentlimit erreicht (max. {max} pro Begleiter)',
 
 	// Navigation
+	'nav.editCompanion': 'Tierprofil bearbeiten',
+	'nav.openMenu': 'Menü öffnen',
+	'nav.closeMenu': 'Menü schließen',
+	'nav.pinMenu': 'Menü anheften',
+	'nav.unpinMenu': 'Menü lösen (volle Breite)',
+	'nav.add': 'Hinzufügen',
 	'nav.dashboard': 'Übersicht',
 	'nav.overview': 'Übersicht',
 	'nav.journal': 'Tagebuch',
@@ -355,6 +363,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.signup.submit': 'Konto erstellen',
 	'page.signup.creating': 'Konto wird erstellt…',
 	'page.signup.haveAccount': 'Schon ein Konto?',
+	'page.login.testLoginTitle': 'Testkonto',
+	'page.login.testLoginHint': 'Benutzer {username} · Passwort {password}',
+	'page.login.testLoginFill': 'Ausfüllen',
 	'page.login.tagline': 'Jede Geschichte verdient bewahrt zu werden.',
 	'page.login.signInWith': 'Mit {provider} anmelden',
 	'page.login.usernameLabel': 'Benutzername',

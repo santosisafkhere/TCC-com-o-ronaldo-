@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { shrinkImage } from '$lib/imageShrink';
 	import { avatarCacheBusts, bustAvatarCache } from '$lib/avatarCache.svelte';
 	import { t, getLocale } from '$lib/i18n';
@@ -189,29 +190,33 @@
 			</div>
 		{/if}
 		<div class="flex gap-1.5 mt-2">
-			<button
-				bind:this={buttonEl}
-				type="button"
-				class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-50"
-				title={uploadError ?? t(locale, 'component.avatar.changePhoto')}
-				aria-label={uploadError
-					? t(locale, 'component.avatar.uploadError', { error: uploadError })
-					: t(locale, 'component.avatar.changePhotoFor', { name })}
-				onclick={(e) => {
-					e.stopPropagation();
-					fileInputEl?.click();
-				}}
-				disabled={uploading}
-			>
-				{#if uploading}
-					<Loader2 class="h-3.5 w-3.5 animate-spin" />
-				{:else if uploadError}
-					<AlertTriangle class="h-3.5 w-3.5 text-coral" />
-				{:else}
-					<Camera class="h-3.5 w-3.5" />
-				{/if}
-				{t(locale, 'component.avatar.changePhoto')}
-			</button>
+			{#if page.data.uploadsAvailable !== false}
+				<button
+					bind:this={buttonEl}
+					type="button"
+					class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-50"
+					title={uploadError ?? t(locale, 'component.avatar.changePhoto')}
+					aria-label={uploadError
+						? t(locale, 'component.avatar.uploadError', { error: uploadError })
+						: t(locale, 'component.avatar.changePhotoFor', { name })}
+					onclick={(e) => {
+						e.stopPropagation();
+						fileInputEl?.click();
+					}}
+					disabled={uploading}
+				>
+					{#if uploading}
+						<Loader2 class="h-3.5 w-3.5 animate-spin" />
+					{:else if uploadError}
+						<AlertTriangle class="h-3.5 w-3.5 text-coral" />
+					{:else}
+						<Camera class="h-3.5 w-3.5" />
+					{/if}
+					{t(locale, 'component.avatar.changePhoto')}
+				</button>
+			{:else}
+				<p class="text-xs text-muted-foreground">{t(locale, 'common.uploadsUnavailable')}</p>
+			{/if}
 			{#if immichEnabled && onpickImmich}
 				<button
 					type="button"

@@ -52,7 +52,10 @@ const test = base.extend<{ world: DemoWorld }>({
 		let usersReady = false;
 		while (Date.now() < phase1Deadline) {
 			try {
-				const res = await fetch(`${baseURL}/auth/login`);
+				// The picker text is checked in English; ask for it (the default is pt).
+				const res = await fetch(`${baseURL}/auth/login`, {
+					headers: { 'accept-language': 'en' }
+				});
 				if (res.ok) {
 					const html = await res.text();
 					if (html.includes('Explore as Admin')) {

@@ -345,7 +345,7 @@
 						>{media.length}/{data.maxDailyMedia}</span
 					>
 				</h2>
-				{#if media.length < data.maxDailyMedia}
+				{#if media.length < data.maxDailyMedia && data.uploadsAvailable !== false}
 					<label
 						class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
 					>
@@ -373,7 +373,13 @@
 				</div>
 			{/if}
 			<CardContent>
-				{#if media.length === 0}
+				{#if media.length === 0 && data.uploadsAvailable === false}
+					<p
+						class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground"
+					>
+						{t(locale, 'common.uploadsUnavailable')}
+					</p>
+				{:else if media.length === 0}
 					<label
 						class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg py-8 cursor-pointer transition-colors hover:opacity-80"
 					>
@@ -480,7 +486,7 @@
 								</div>
 							</div>
 						{/each}
-						{#if media.length < data.maxDailyMedia}
+						{#if media.length < data.maxDailyMedia && data.uploadsAvailable !== false}
 							<label
 								class="aspect-square w-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:opacity-80 transition-colors"
 							>

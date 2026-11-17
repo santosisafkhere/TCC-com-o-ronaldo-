@@ -2,6 +2,7 @@ import type { Messages } from './en';
 
 const messages: Record<keyof Messages, string> = {
 	// Common
+	'common.uploadsUnavailable': 'Il caricamento di foto e file non è disponibile per ora.',
 	'common.save': 'Salva',
 	'common.saving': 'Salvataggio…',
 	'common.saved': 'Salvato.',
@@ -98,6 +99,7 @@ const messages: Record<keyof Messages, string> = {
 		'Il nome utente deve avere da 3 a 32 caratteri: lettere, numeri, - o _.',
 	'error.usernameTaken': 'Questo nome utente è già in uso.',
 	'error.invalidEmail': 'Inserisci un’e-mail valida o lascia vuoto.',
+	'error.uploadsUnavailable': 'Il caricamento dei file non è ancora attivo su questo server.',
 	'error.emailAlreadyTaken': 'Questo indirizzo e-mail è già in uso.',
 	'error.emailRequired': "L'indirizzo e-mail è obbligatorio.",
 	'error.emailInvalid': 'Inserisci un indirizzo e-mail valido.',
@@ -171,6 +173,12 @@ const messages: Record<keyof Messages, string> = {
 	'error.maxDocumentsExceeded': 'Limite documenti raggiunto (max {max} per compagno)',
 
 	// Navigation
+	'nav.editCompanion': "Modifica profilo dell'animale",
+	'nav.openMenu': 'Apri menu',
+	'nav.closeMenu': 'Chiudi menu',
+	'nav.pinMenu': 'Fissa il menu',
+	'nav.unpinMenu': 'Sblocca menu (schermo intero)',
+	'nav.add': 'Aggiungi',
 	'nav.dashboard': 'Bacheca',
 	'nav.overview': 'Panoramica',
 	'nav.journal': 'Diario',
@@ -349,6 +357,9 @@ const messages: Record<keyof Messages, string> = {
 	'page.signup.submit': 'Crea il mio account',
 	'page.signup.creating': 'Creazione account…',
 	'page.signup.haveAccount': 'Hai già un account?',
+	'page.login.testLoginTitle': 'Account di prova',
+	'page.login.testLoginHint': 'Utente {username} · password {password}',
+	'page.login.testLoginFill': 'Compila',
 	'page.login.tagline': 'Ogni storia merita di essere raccontata.',
 	'page.login.signInWith': 'Accedi con {provider}',
 	'page.login.usernameLabel': 'Nome utente',

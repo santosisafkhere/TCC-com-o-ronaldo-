@@ -4,7 +4,7 @@ import { db, schema } from '$lib/server/db';
 import { version } from '../../package.json';
 import { t } from '$lib/i18n';
 import { resolveReminderUndoSeconds, DEMO_MODE } from '$lib/server/env';
-import { isImmichEnabled, isPaperlessEnabled } from '$lib/server/storage';
+import { isImmichEnabled, isPaperlessEnabled, UPLOADS_AVAILABLE } from '$lib/server/storage';
 
 export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 	const isApiRoute = url.pathname.startsWith('/api');
@@ -51,6 +51,9 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 		// Caretakers don't get the picker — the underlying endpoints reject them.
 		immichEnabled: isImmichEnabled() && locals.user?.role !== 'caretaker',
 		paperlessEnabled: isPaperlessEnabled() && locals.user?.role !== 'caretaker',
+		// False on a serverless host without S3 storage: upload controls are
+		// disabled with a notice instead of failing.
+		uploadsAvailable: UPLOADS_AVAILABLE,
 		demoMode: DEMO_MODE,
 		demoNotice
 	};

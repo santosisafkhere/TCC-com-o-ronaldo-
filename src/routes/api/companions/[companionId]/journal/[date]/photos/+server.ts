@@ -5,7 +5,7 @@ import { db, schema } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import sharp from 'sharp';
-import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
+import { getStorage, STORAGE_BACKEND, assertUploadsAvailable } from '$lib/server/storage';
 import { MAX_DAILY_MEDIA, UPLOAD_MAX_MB, VIDEO_MAX_MB, VIDEO_TRANSCODE } from '$lib/server/env';
 import { isAllowedVideoMime, looksLikeVideo, videoExtFromMime } from '$lib/server/storage/mime';
 import { demuxerForMime, transcodeAvailable } from '$lib/server/video/transcode';
@@ -67,6 +67,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
+	assertUploadsAvailable(t(locals.locale, 'error.uploadsUnavailable'));
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
 	const { companionId, date } = params;

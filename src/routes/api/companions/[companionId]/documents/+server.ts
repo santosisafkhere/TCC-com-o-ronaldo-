@@ -6,7 +6,7 @@ import { db, schema, lockInTransaction } from '$lib/server/db';
 import { eq, and, count, desc } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import sharp from 'sharp';
-import { getStorage, STORAGE_BACKEND } from '$lib/server/storage';
+import { getStorage, STORAGE_BACKEND, assertUploadsAvailable } from '$lib/server/storage';
 import { MAX_DOCUMENTS_PER_COMPANION, UPLOAD_MAX_MB } from '$lib/server/env';
 import {
 	documentExtFromMime,
@@ -81,6 +81,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
+	assertUploadsAvailable(t(locals.locale, 'error.uploadsUnavailable'));
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 	if (locals.user.role === 'caretaker') error(403, t(locals.locale, 'error.forbidden'));
 	await assertCanEditCompanion(locals, params.companionId);

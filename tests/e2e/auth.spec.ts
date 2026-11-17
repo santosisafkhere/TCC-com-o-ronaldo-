@@ -77,9 +77,12 @@ test.describe('forgot password', () => {
 });
 
 test.describe('auth brand', () => {
-	test('login brand panel shows Ein', async ({ app, page }, testInfo) => {
+	test('login brand panel shows the banner artwork', async ({ app, page }, testInfo) => {
 		test.skip(testInfo.project.name !== 'desktop', 'brand panel is desktop-only');
 		await page.goto(app.server.baseURL + '/auth/login');
-		await expect(page.getByTestId('ein')).toBeVisible({ timeout: 8_000 });
+		const banner = page.locator('img[src="/login-banner.webp"]');
+		await expect(banner).toBeVisible({ timeout: 8_000 });
+		// Loaded, not a broken image.
+		expect(await banner.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 	});
 });

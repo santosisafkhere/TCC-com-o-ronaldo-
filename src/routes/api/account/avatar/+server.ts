@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { assertUploadsAvailable } from '$lib/server/storage';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
@@ -7,6 +8,7 @@ import { avatarLegacyKey } from '$lib/server/storage/avatarKeys';
 import { processAvatarUpload, deletePreviousAvatar, deleteAvatar } from '$lib/server/avatar';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
+	assertUploadsAvailable(t(locals.locale, 'error.uploadsUnavailable'));
 	if (!locals.user) error(401, t(locals.locale, 'error.unauthorized'));
 
 	const userId = locals.user.id;

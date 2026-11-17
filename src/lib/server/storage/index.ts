@@ -1,3 +1,4 @@
+import { error as httpError } from '@sveltejs/kit';
 import { IMMICH_CONFIG, PAPERLESS_CONFIG, S3_CONFIG, STORAGE_BACKEND } from '$lib/server/env';
 import { LocalBackend } from './local';
 import { createS3Backend } from './s3';
@@ -73,3 +74,16 @@ export function isPaperlessEnabled(): boolean {
 }
 
 export { STORAGE_BACKEND };
+
+/**
+ * Whether new files (photos, avatars, documents) can be stored. Not on a
+ * serverless host (Vercel) still configured for local disk: its filesystem is
+ * read-only and throwaway, so every upload would fail. Configure S3-compatible
+ * storage (STORAGE_BACKEND=s3, e.g. Supabase Storage) to enable uploads there.
+ */
+export const UPLOADS_AVAILABLE = !(process.env.VERCEL && STORAGE_BACKEND === 'local');
+
+/** Throws a 503 with a readable message when uploads are not available. */
+export function assertUploadsAvailable(message: string): void {
+	if (!UPLOADS_AVAILABLE) throw httpError(503, message);
+}

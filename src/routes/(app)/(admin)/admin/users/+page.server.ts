@@ -91,7 +91,9 @@ export const actions: Actions = {
 			username,
 			displayName,
 			passwordHash,
-			role
+			role,
+			// Same language as the admin creating the account; the user can change it.
+			locale: locals.locale
 		});
 
 		return { createSuccess: true };

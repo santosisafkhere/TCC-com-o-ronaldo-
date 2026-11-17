@@ -170,7 +170,14 @@
 						{t(locale, 'paperless.picker.button')}
 					</Button>
 				{/if}
-				<Button size="sm" disabled={uploading} onclick={() => fileInput?.click()}>
+				<Button
+					size="sm"
+					disabled={uploading || data.uploadsAvailable === false}
+					title={data.uploadsAvailable === false
+						? t(locale, 'common.uploadsUnavailable')
+						: undefined}
+					onclick={() => fileInput?.click()}
+				>
 					{#if uploading}
 						<Loader2 class="h-4 w-4 mr-1.5 animate-spin" />
 						{t(locale, 'page.documents.uploading')}
@@ -190,6 +197,12 @@
 			{/if}
 		{/snippet}
 	</PageHeader>
+
+	{#if data.uploadsAvailable === false}
+		<Alert>
+			<AlertDescription>{t(locale, 'common.uploadsUnavailable')}</AlertDescription>
+		</Alert>
+	{/if}
 
 	{#if uploadError}
 		<Alert variant="coral">

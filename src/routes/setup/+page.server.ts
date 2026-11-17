@@ -23,7 +23,7 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies }) => {
+	default: async ({ request, cookies, locals }) => {
 		const data = await request.formData();
 		const displayName = String(data.get('displayName') ?? '').trim();
 		const username = String(data.get('username') ?? '')
@@ -64,7 +64,9 @@ export const actions: Actions = {
 				username,
 				displayName,
 				passwordHash,
-				role: 'admin'
+				role: 'admin',
+				// Start in the language the account was created in.
+				locale: locals.locale
 			});
 			return true;
 		});

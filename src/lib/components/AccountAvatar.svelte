@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { shrinkImage } from '$lib/imageShrink';
 	import { invalidateAll } from '$app/navigation';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
@@ -133,20 +134,24 @@
 	<UserAvatar {userId} {displayName} {avatarPath} size="lg" />
 	<p class="text-xs text-muted-foreground">{t(locale, 'page.settings.profilePhoto')}</p>
 	<div class="flex gap-1.5">
-		<button
-			type="button"
-			class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-50"
-			aria-label={t(locale, 'page.settings.changePhoto')}
-			onclick={() => fileInputEl?.click()}
-			disabled={uploading}
-		>
-			{#if uploading}
-				<Loader2 class="h-3.5 w-3.5 animate-spin" />
-			{:else}
-				<Camera class="h-3.5 w-3.5" />
-			{/if}
-			{t(locale, 'page.settings.changePhoto')}
-		</button>
+		{#if page.data.uploadsAvailable !== false}
+			<button
+				type="button"
+				class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-50"
+				aria-label={t(locale, 'page.settings.changePhoto')}
+				onclick={() => fileInputEl?.click()}
+				disabled={uploading}
+			>
+				{#if uploading}
+					<Loader2 class="h-3.5 w-3.5 animate-spin" />
+				{:else}
+					<Camera class="h-3.5 w-3.5" />
+				{/if}
+				{t(locale, 'page.settings.changePhoto')}
+			</button>
+		{:else}
+			<p class="text-xs text-muted-foreground">{t(locale, 'common.uploadsUnavailable')}</p>
+		{/if}
 		{#if immichEnabled}
 			<button
 				type="button"

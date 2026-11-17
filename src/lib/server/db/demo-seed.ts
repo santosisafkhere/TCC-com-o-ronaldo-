@@ -154,6 +154,8 @@ export async function seedUsers(db: SeedDb): Promise<void> {
 		{
 			...SEED.admin,
 			passwordHash,
+			// The seed content is English, and so are the demo and the e2e suite.
+			locale: 'en',
 			role: 'admin',
 			email: 'spike@swordfish2.ship',
 			phone: '(555) 010-2071'
@@ -161,6 +163,8 @@ export async function seedUsers(db: SeedDb): Promise<void> {
 		{
 			...SEED.member,
 			passwordHash,
+			// The seed content is English, and so are the demo and the e2e suite.
+			locale: 'en',
 			role: 'member',
 			email: 'jet@hammerhead.ship',
 			phone: '(555) 010-7402'
@@ -168,6 +172,8 @@ export async function seedUsers(db: SeedDb): Promise<void> {
 		{
 			...SEED.caretaker,
 			passwordHash,
+			// The seed content is English, and so are the demo and the e2e suite.
+			locale: 'en',
 			role: 'caretaker',
 			email: 'faye@redtail.ship',
 			phone: '(555) 010-0613'
@@ -175,6 +181,8 @@ export async function seedUsers(db: SeedDb): Promise<void> {
 		{
 			...SEED.resetUser,
 			passwordHash,
+			// The seed content is English, and so are the demo and the e2e suite.
+			locale: 'en',
 			role: 'member',
 			email: 'vicious@reddragon.club',
 			phone: '(555) 010-3417'

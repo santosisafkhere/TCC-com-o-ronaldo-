@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { assertUploadsAvailable } from '$lib/server/storage';
 import { t } from '$lib/i18n';
 import { db, schema } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
@@ -8,6 +9,7 @@ import { assertCanEditCompanion } from '$lib/server/permissions';
 import { processAvatarUpload, deletePreviousAvatar, deleteAvatar } from '$lib/server/avatar';
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
+	assertUploadsAvailable(t(locals.locale, 'error.uploadsUnavailable'));
 	await assertCanEditCompanion(locals, params.companionId);
 
 	const companion = await db.query.companions.findFirst({

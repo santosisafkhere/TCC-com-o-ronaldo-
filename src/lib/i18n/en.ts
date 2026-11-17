@@ -1,5 +1,6 @@
 const messages = {
 	// Common
+	'common.uploadsUnavailable': 'Photo and file uploads are unavailable for now.',
 	'common.save': 'Save',
 	'common.saving': 'Saving…',
 	'common.saved': 'Saved.',
@@ -99,6 +100,7 @@ const messages = {
 	'error.signupUsernameFormat': 'Usernames need 3–32 characters: letters, numbers, - or _.',
 	'error.usernameTaken': 'That username is already taken.',
 	'error.invalidEmail': 'Enter a valid email or leave it blank.',
+	'error.uploadsUnavailable': 'File uploads are not enabled on this server yet.',
 	'error.emailAlreadyTaken': 'That email address is already in use.',
 	'error.emailRequired': 'Email address is required.',
 	'error.emailInvalid': 'Enter a valid email address.',
@@ -165,6 +167,12 @@ const messages = {
 	'error.maxDocumentsExceeded': 'Document limit reached (max {max} per companion)',
 
 	// Navigation
+	'nav.editCompanion': 'Edit pet profile',
+	'nav.openMenu': 'Open menu',
+	'nav.closeMenu': 'Close menu',
+	'nav.pinMenu': 'Pin menu open',
+	'nav.unpinMenu': 'Unpin menu (full width)',
+	'nav.add': 'Add',
 	'nav.dashboard': 'Dashboard',
 	'nav.overview': 'Overview',
 	'nav.journal': 'Journal',
@@ -347,6 +355,9 @@ const messages = {
 	'page.signup.submit': 'Create my account',
 	'page.signup.creating': 'Creating account…',
 	'page.signup.haveAccount': 'Already have an account?',
+	'page.login.testLoginTitle': 'Test account',
+	'page.login.testLoginHint': 'Username {username} · password {password}',
+	'page.login.testLoginFill': 'Fill in',
 	'page.login.tagline': 'Every tail has a story.',
 	'page.login.usernameLabel': 'Username',
 	'page.login.usernamePlaceholder': 'spike',

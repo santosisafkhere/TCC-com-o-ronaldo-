@@ -15,8 +15,9 @@
 		user: User;
 		open: boolean;
 		onclose: () => void;
-		/** 'sheet' = mobile bottom sheet; 'popover' = desktop sidebar popover. */
-		variant?: 'sheet' | 'popover';
+		/** 'sheet' = mobile bottom sheet; 'popover' = above a sidebar footer;
+		 *  'dropdown' = below a top-bar button. */
+		variant?: 'sheet' | 'popover' | 'dropdown';
 	}
 
 	let { user, open, onclose, variant = 'sheet' }: Props = $props();
@@ -60,7 +61,9 @@
 		{onkeydown}
 		class={variant === 'sheet'
 			? 'fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-border bg-popover pb-safe shadow-xl animate-in slide-in-from-bottom-4 duration-200'
-			: 'absolute bottom-full left-0 right-0 z-50 mb-2 rounded-xl border border-border bg-popover shadow-xl'}
+			: variant === 'dropdown'
+				? 'absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-border bg-popover shadow-xl'
+				: 'absolute bottom-full left-0 right-0 z-50 mb-2 rounded-xl border border-border bg-popover shadow-xl'}
 	>
 		<div class="flex items-center gap-3 px-4 py-3 border-b border-border">
 			<UserAvatar
@@ -71,7 +74,7 @@
 			/>
 			<div class="min-w-0 flex-1">
 				<p class="text-sm font-semibold text-foreground truncate">{user.displayName}</p>
-				<p class="text-[11px] text-muted-foreground capitalize">{user.role}</p>
+				<p class="text-[11px] text-muted-foreground">{t(locale, `enum.role.${user.role}`)}</p>
 			</div>
 			{#if variant === 'sheet'}
 				<button

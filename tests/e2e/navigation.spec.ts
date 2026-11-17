@@ -97,18 +97,15 @@ test('admin account sheet Companions link navigates to /admin/companions @mobile
 });
 
 // ---------------------------------------------------------------------------
-// B. Owner account popover — desktop sidebar
+// B. Owner navigation — top bar account menu and the hamburger menu
 // ---------------------------------------------------------------------------
 
-test('admin sidebar account popover shows Settings + Users + Companions + Sign Out', async ({
+test('admin account menu shows Settings + Users + Companions + Sign Out', async ({
 	asAdmin
 }, testInfo) => {
-	test.skip(testInfo.project.name !== 'desktop', 'desktop sidebar only');
+	test.skip(testInfo.project.name !== 'desktop', 'desktop only');
 	await asAdmin.goto('/');
-	// The account trigger is the button with aria-haspopup="dialog" in the sidebar
-	const trigger = asAdmin.getByRole('button', { name: new RegExp(SEED.admin.displayName, 'i') });
-	await expect(trigger).toBeVisible({ timeout: 8_000 });
-	await trigger.click();
+	await asAdmin.getByRole('button', { name: 'Account menu' }).click();
 
 	const popover = asAdmin.getByRole('dialog', { name: 'Account menu' });
 	await expect(popover).toBeVisible({ timeout: 8_000 });
@@ -118,16 +115,12 @@ test('admin sidebar account popover shows Settings + Users + Companions + Sign O
 	await expect(popover.getByRole('button', { name: 'Sign Out' })).toBeVisible();
 });
 
-test('member sidebar account popover shows Settings + Sign Out but not Users/Companions', async ({
+test('member account menu shows Settings + Sign Out but not Users/Companions', async ({
 	asMember
 }, testInfo) => {
-	test.skip(testInfo.project.name !== 'desktop', 'desktop sidebar only');
+	test.skip(testInfo.project.name !== 'desktop', 'desktop only');
 	await asMember.goto('/');
-	const trigger = asMember.getByRole('button', {
-		name: new RegExp(SEED.member.displayName, 'i')
-	});
-	await expect(trigger).toBeVisible({ timeout: 8_000 });
-	await trigger.click();
+	await asMember.getByRole('button', { name: 'Account menu' }).click();
 
 	const popover = asMember.getByRole('dialog', { name: 'Account menu' });
 	await expect(popover).toBeVisible({ timeout: 8_000 });
@@ -135,6 +128,58 @@ test('member sidebar account popover shows Settings + Sign Out but not Users/Com
 	await expect(popover.getByRole('button', { name: 'Sign Out' })).toBeVisible();
 	await expect(popover.getByRole('link', { name: 'Users' })).toHaveCount(0);
 	await expect(popover.getByRole('link', { name: 'Companions' })).toHaveCount(0);
+});
+
+test('hamburger menu: closed by default, opens, navigates and closes again', async ({
+	asAdmin
+}) => {
+	await asAdmin.goto(`/${SEED.companions.ein.id}`);
+	const toggle = asAdmin.getByRole('button', { name: 'Open menu' });
+	const menu = asAdmin.locator('#app-nav');
+	// Content gets the whole screen until the menu is asked for.
+	await expect(menu).toHaveCount(0);
+	await toggle.click();
+	await expect(menu).toBeVisible();
+	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	// Admin section is in the menu for admins.
+	await expect(menu.getByRole('link', { name: 'Users' })).toBeVisible();
+	// Choosing a destination navigates and closes the menu.
+	await menu.getByRole('link', { name: 'Health' }).click();
+	await expect(asAdmin).toHaveURL(new RegExp(`/${SEED.companions.ein.id}/health`));
+	await expect(menu).toHaveCount(0);
+	// Escape closes it too.
+	await toggle.click();
+	await expect(menu).toBeVisible();
+	await asAdmin.keyboard.press('Escape');
+	await expect(menu).toHaveCount(0);
+});
+
+test('hamburger menu has no admin section for members', async ({ asMember }) => {
+	await asMember.goto('/');
+	await asMember.getByRole('button', { name: 'Open menu' }).click();
+	const menu = asMember.locator('#app-nav');
+	await expect(menu.getByRole('link', { name: 'Settings' })).toBeVisible();
+	await expect(menu.getByRole('link', { name: 'Users' })).toHaveCount(0);
+});
+
+test('menu can be pinned beside the content on wide screens and stays pinned', async ({
+	asAdmin
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'desktop', 'pinning is a wide-screen option');
+	await asAdmin.setViewportSize({ width: 1400, height: 900 });
+	await asAdmin.goto('/');
+	await asAdmin.getByRole('button', { name: 'Open menu' }).click();
+	await asAdmin.locator('#app-nav').getByRole('button', { name: 'Pin menu open' }).click();
+	// Docked: no hamburger, menu visible without being opened.
+	await expect(asAdmin.getByRole('button', { name: 'Open menu' })).toHaveCount(0);
+	await asAdmin.reload();
+	await expect(asAdmin.locator('#app-nav')).toBeVisible();
+	// Unpin returns to the full-width layout.
+	await asAdmin
+		.locator('#app-nav')
+		.getByRole('button', { name: /Unpin menu/ })
+		.click();
+	await expect(asAdmin.getByRole('button', { name: 'Open menu' })).toBeVisible();
 });
 
 // ---------------------------------------------------------------------------

@@ -107,9 +107,9 @@ test('oidc-variants: signup denied when OIDC_ALLOW_SIGNUP=false', async ({ page 
 		// The error query param is present in the URL.
 		await expect(page).toHaveURL(/error=oidc_not_provisioned/);
 
-		// Navigating to the app root must still redirect to login (no session).
+		// No session: the app root shows the public landing page, not the app.
 		await page.goto(world.server.baseURL + '/');
-		await expect(page).toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+		await expect(page).toHaveURL(/\/conheca/, { timeout: 10_000 });
 	} finally {
 		await teardown(world);
 	}

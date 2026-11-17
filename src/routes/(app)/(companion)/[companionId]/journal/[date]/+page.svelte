@@ -799,24 +799,26 @@
 								{t(locale, 'immich.picker.button')}
 							</button>
 						{/if}
-						<label
-							class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
-						>
-							{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
-									class="h-3.5 w-3.5"
+						{#if data.uploadsAvailable !== false}
+							<label
+								class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent cursor-pointer"
+							>
+								{#if uploading}{t(locale, 'page.journal.day.uploading')}{:else}<Plus
+										class="h-3.5 w-3.5"
+									/>
+									{t(locale, 'page.journal.day.addMedia')}{/if}
+								<input
+									bind:this={fileInputEl}
+									type="file"
+									name="photos"
+									accept={MEDIA_ACCEPT}
+									multiple
+									class="sr-only"
+									onchange={handleFileInput}
+									disabled={uploading}
 								/>
-								{t(locale, 'page.journal.day.addMedia')}{/if}
-							<input
-								bind:this={fileInputEl}
-								type="file"
-								name="photos"
-								accept={MEDIA_ACCEPT}
-								multiple
-								class="sr-only"
-								onchange={handleFileInput}
-								disabled={uploading}
-							/>
-						</label>
+							</label>
+						{/if}
 					</div>
 				{/if}
 			</div>
@@ -830,7 +832,13 @@
 				</div>
 			{/if}
 
-			{#if media.length === 0}
+			{#if media.length === 0 && data.uploadsAvailable === false}
+				<p
+					class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground"
+				>
+					{t(locale, 'common.uploadsUnavailable')}
+				</p>
+			{:else if media.length === 0}
 				<label
 					class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg py-8 cursor-pointer transition-colors hover:opacity-80"
 				>
