@@ -333,6 +333,8 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Iniciar sessão',
+	'page.login.bannerAlt':
+		'Achei Meu Pet: um coelho, um gato, um cachorro, uma calopsita e um porquinho-da-índia. Cada pet merece ser contado: saúde, rotina, cuidados e diário.',
 	'page.login.tagline': 'Cada história merece ser contada.',
 	'page.login.signInWith': 'Iniciar sessão com {provider}',
 	'page.login.usernameLabel': 'Nome de utilizador',

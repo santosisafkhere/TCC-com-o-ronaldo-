@@ -331,6 +331,8 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Anmelden',
+	'page.login.bannerAlt':
+		'Achei Meu Pet: ein Kaninchen, eine Katze, ein Hund, ein Nymphensittich und ein Meerschweinchen. Jedes Tier zählt: Gesundheit, Routine, Pflege und Tagebuch.',
 	'page.login.tagline': 'Jede Geschichte verdient bewahrt zu werden.',
 	'page.login.signInWith': 'Mit {provider} anmelden',
 	'page.login.usernameLabel': 'Benutzername',

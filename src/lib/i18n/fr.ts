@@ -329,6 +329,8 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Se connecter',
+	'page.login.bannerAlt':
+		"Achei Meu Pet : un lapin, un chat, un chien, une calopsitte et un cochon d'Inde. Chaque animal mérite d'être compté : santé, routine, soins et journal.",
 	'page.login.tagline': "Chaque histoire mérite d'être racontée.",
 	'page.login.signInWith': 'Se connecter avec {provider}',
 	'page.login.usernameLabel': "Nom d'utilisateur",

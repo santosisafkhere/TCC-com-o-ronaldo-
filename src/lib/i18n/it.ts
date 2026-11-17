@@ -327,6 +327,8 @@ const messages: Record<keyof Messages, string> = {
 
 	// Page: Login
 	'page.login.title': 'Accedi',
+	'page.login.bannerAlt':
+		'Achei Meu Pet: un coniglio, un gatto, un cane, una calopsitta e una cavia. Ogni animale merita di essere contato: salute, routine, cure e diario.',
 	'page.login.tagline': 'Ogni storia merita di essere raccontata.',
 	'page.login.signInWith': 'Accedi con {provider}',
 	'page.login.usernameLabel': 'Nome utente',

@@ -35,6 +35,8 @@
 			tagline={t(locale, 'page.login.tagline')}
 			subtext={t(locale, 'page.login.taglineSubtext')}
 			footer={t(locale, 'page.login.brandFooter')}
+			image="/login-banner.webp"
+			imageAlt={t(locale, 'page.login.bannerAlt')}
 		/>
 
 		<!-- Form panel -->

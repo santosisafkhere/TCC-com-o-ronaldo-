@@ -326,6 +326,8 @@ const messages = {
 	// Page: Login
 	'page.login.title': 'Sign in',
 	'page.login.signInWith': 'Sign in with {provider}',
+	'page.login.bannerAlt':
+		'Achei Meu Pet: a rabbit, a cat, a dog, a cockatiel and a guinea pig. Every pet deserves to be counted: health, routine, care and journal.',
 	'page.login.tagline': 'Every tail has a story.',
 	'page.login.usernameLabel': 'Username',
 	'page.login.usernamePlaceholder': 'spike',

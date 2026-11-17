@@ -2,11 +2,44 @@
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import Ein from '$lib/components/Ein.svelte';
 
-	let { tagline, subtext, footer }: { tagline: string; subtext: string; footer: string } = $props();
+	let {
+		tagline,
+		subtext,
+		footer,
+		image,
+		imageAlt = ''
+	}: {
+		tagline: string;
+		subtext: string;
+		footer: string;
+		/** Full-bleed banner artwork shown instead of the built-in layout from md up. */
+		image?: string;
+		imageAlt?: string;
+	} = $props();
 </script>
 
+{#if image}
+	<!-- Banner artwork (wide screens). Phones keep the compact strip below. -->
+	<!-- The aspect ratio makes the row at least as tall as the artwork, so its
+	     bottom row (feature chips) is never cropped; a taller form just widens
+	     the cover crop at the sides. -->
+	<div class="relative hidden aspect-[880/930] overflow-hidden bg-[#3b1a9e] md:block">
+		<img
+			src={image}
+			alt={imageAlt}
+			width="880"
+			height="930"
+			fetchpriority="high"
+			class="absolute inset-0 h-full w-full object-cover object-top"
+		/>
+	</div>
+{/if}
+
 <div
-	class="bg-auth-brand relative flex flex-col justify-between overflow-hidden px-8 py-7 text-white md:px-11 md:py-12"
+	class={[
+		'bg-auth-brand relative flex flex-col justify-between overflow-hidden px-8 py-7 text-white md:px-11 md:py-12',
+		image && 'md:hidden'
+	]}
 >
 	<!-- Radial accent blobs -->
 	<div
