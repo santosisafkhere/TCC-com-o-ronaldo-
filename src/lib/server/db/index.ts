@@ -5,6 +5,7 @@ import postgres from 'postgres';
 import { mkdirSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { env } from '$env/dynamic/private';
+import { building } from '$app/environment';
 import * as schema from './schema';
 
 // Two drivers, one Postgres dialect:
@@ -28,8 +29,10 @@ const isPostgresUrl = /^postgres(ql)?:\/\//i.test(rawUrl);
 
 // Serverless hosts have a read-only, throwaway disk: the embedded database
 // cannot live there. Fail with an explanation in the function logs instead of
-// an opaque "read-only file system" crash.
-const isServerless = !!process.env.VERCEL;
+// an opaque "read-only file system" crash. Not while building: SvelteKit loads
+// server modules at build time to analyse routes, and runtime-only variables
+// (DATABASE_URL) need not exist then — that analysis uses an in-memory DB.
+const isServerless = !!process.env.VERCEL && !building;
 if (isServerless && !isPostgresUrl) {
 	throw new Error(
 		rawUrl
@@ -60,7 +63,7 @@ function safeHost(url: string): string {
 
 async function openPglite(): Promise<Db> {
 	let dataDir: string | undefined;
-	if (rawUrl === 'memory://') {
+	if (rawUrl === 'memory://' || building) {
 		dataDir = undefined;
 	} else {
 		// A leftover SQLite path (pre-Postgres installs) is not a PGlite data
