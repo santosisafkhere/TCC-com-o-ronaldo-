@@ -14,6 +14,9 @@ export default defineConfig({
 		// htmlparser2, which is ESM-only; Vercel's function loader does not
 		// support require() of ESM (ERR_REQUIRE_ESM), so every page rendering
 		// markdown crashed there. Bundled, the CJS/ESM boundary disappears.
+		// The whole dependency tree must be listed: a package left out stays a
+		// runtime require() that Vercel's file tracer does not pick up
+		// ("Cannot find module"). The serverless-bundle test enforces this.
 		noExternal: [
 			'sanitize-html',
 			'htmlparser2',
@@ -21,7 +24,16 @@ export default defineConfig({
 			'domutils',
 			'dom-serializer',
 			'entities',
-			'domelementtype'
+			'domelementtype',
+			'escape-string-regexp',
+			'is-plain-object',
+			'launder',
+			'dayjs',
+			'parse-srcset',
+			'postcss',
+			'nanoid',
+			'picocolors',
+			'source-map-js'
 		]
 	},
 	test: {
