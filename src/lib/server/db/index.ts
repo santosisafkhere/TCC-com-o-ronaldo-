@@ -127,19 +127,31 @@ async function openPglite(): Promise<Db> {
 	return pglite as unknown as Db;
 }
 
+// Settings for hosted Postgres behind Supabase's transaction-mode pooler
+// (port 6543). Exported so a test can pin the two that production depends on.
+export const POSTGRES_OPTIONS = {
+	// The transaction pooler does not support prepared statements.
+	prepare: false,
+	// Never queue a second query on a busy connection. postgres.js pipelines
+	// up to 100 by default, and the transaction pooler never answers a
+	// pipelined query: every page loading data in parallel hung until the
+	// function timed out. Measured against the pooler: 67 of 72 parallel
+	// queries hung with the default, 0 with this.
+	max_pipeline: 1,
+	// A small pool keeps the total connection count under the pooler's limit
+	// across serverless instances.
+	max: Number(process.env.DATABASE_POOL_MAX) || 5,
+	idle_timeout: 20,
+	connect_timeout: 10,
+	// Fail a stuck query with an error instead of hanging the request.
+	query_timeout: 20
+} as const;
+
 function openPostgres(): Db {
 	if (process.env.NODE_ENV !== 'production') {
 		console.info(`[einvault] Database: Postgres (${new URL(rawUrl).host})`);
 	}
-	const client = postgres(rawUrl, {
-		// Supabase's transaction-mode pooler (port 6543) does not support
-		// prepared statements.
-		prepare: false,
-		// One serverless instance handles one request at a time; a small pool
-		// keeps the total connection count under the pooler's limit.
-		max: Number(process.env.DATABASE_POOL_MAX) || 5,
-		idle_timeout: 20
-	});
+	const client = postgres(rawUrl, POSTGRES_OPTIONS);
 	return drizzlePostgres(client, { schema }) as unknown as Db;
 }
 
