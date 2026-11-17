@@ -8,6 +8,11 @@ describe('cleanDatabaseUrl', () => {
 		expect(cleanDatabaseUrl(URL_OK)).toBe(URL_OK);
 		expect(cleanDatabaseUrl('memory://')).toBe('memory://');
 		expect(cleanDatabaseUrl('./data/pgdata')).toBe('./data/pgdata');
+		// Not connection-shaped: never guessed into a URL.
+		expect(cleanDatabaseUrl('C:/data/pgdata')).toBe('C:/data/pgdata');
+		expect(cleanDatabaseUrl('PS C:\\api_pet> vercel env add')).toBe(
+			'PS C:\\api_pet> vercel env add'
+		);
 	});
 
 	it('strips bracketed-paste markers and prompt text around the URL', () => {
@@ -15,6 +20,8 @@ describe('cleanDatabaseUrl', () => {
 		expect(cleanDatabaseUrl(`\x1b[200~${URL_OK}\x1b[201~`)).toBe(URL_OK);
 		expect(cleanDatabaseUrl(`PS C:\\api_pet> \n${URL_OK}`)).toBe(URL_OK);
 		expect(cleanDatabaseUrl(`"${URL_OK}"`)).toBe(URL_OK);
+		// Copied without the scheme.
+		expect(cleanDatabaseUrl(URL_OK.replace('postgresql://', ''))).toBe(URL_OK);
 		expect(warn).toHaveBeenCalled();
 		// The warning never contains the value itself.
 		for (const call of warn.mock.calls) expect(String(call[0])).not.toContain('p%40ss');

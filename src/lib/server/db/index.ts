@@ -34,7 +34,17 @@ const isPostgresUrl = /^postgres(ql)?:\/\//i.test(rawUrl);
 export function cleanDatabaseUrl(value: string): string {
 	if (/^postgres(ql)?:\/\/[^\s\x00-\x1f\x7f]+$/i.test(value)) return value;
 	const match = value.match(/postgres(?:ql)?:\/\/[^\s\x00-\x1f\x7f"']+/i);
-	if (!match) return value;
+	if (!match) {
+		// Copied without its scheme: "user:password@host:port/database".
+		if (/^[^\s/@:]+:[^\s@]+@[a-z0-9.-]+:\d+\/[^\s/]+$/i.test(value)) {
+			console.warn(
+				'[einvault] DATABASE_URL is missing its "postgresql://" prefix; adding it. ' +
+					'Fix the stored value when convenient.'
+			);
+			return `postgresql://${value}`;
+		}
+		return value;
+	}
 	console.warn(
 		'[einvault] DATABASE_URL had extra characters around the connection string ' +
 			'(often from pasting into a terminal); using only the postgres:// part.'
