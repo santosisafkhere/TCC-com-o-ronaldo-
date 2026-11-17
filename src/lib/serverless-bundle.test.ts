@@ -13,8 +13,8 @@ const BUNDLED_ROOTS = ['sanitize-html'];
 
 function noExternalList(): string[] {
 	const config = readFileSync(join(ROOT, 'vite.config.ts'), 'utf8');
-	const block = config.match(/noExternal:\s*\[([\s\S]*?)\]/);
-	if (!block) throw new Error('ssr.noExternal not found in vite.config.ts');
+	const block = config.match(/SERVERLESS_BUNDLED = \[([\s\S]*?)\]/);
+	if (!block) throw new Error('SERVERLESS_BUNDLED not found in vite.config.ts');
 	return [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
 }
 

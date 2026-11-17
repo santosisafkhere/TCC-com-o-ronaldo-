@@ -33,7 +33,8 @@
 	const PIN_KEY = 'amp.menuPinned';
 	let menuOpen = $state(false);
 	let pinPreference = $state(false);
-	let wide = $state(false);
+	const WIDE_QUERY = '(min-width: 1024px)';
+	let wide = $state(browser && window.matchMedia(WIDE_QUERY).matches);
 	let docked = $derived(pinPreference && wide);
 
 	if (browser) {
@@ -42,10 +43,15 @@
 		} catch {
 			/* storage unavailable: default (unpinned) */
 		}
-		const mq = window.matchMedia('(min-width: 1024px)');
-		wide = mq.matches;
-		mq.addEventListener('change', (e) => (wide = e.matches));
 	}
+
+	// Follow the window crossing the wide-screen breakpoint.
+	$effect(() => {
+		const mq = window.matchMedia(WIDE_QUERY);
+		const onChange = (e: MediaQueryListEvent) => (wide = e.matches);
+		mq.addEventListener('change', onChange);
+		return () => mq.removeEventListener('change', onChange);
+	});
 
 	function togglePin() {
 		pinPreference = !pinPreference;

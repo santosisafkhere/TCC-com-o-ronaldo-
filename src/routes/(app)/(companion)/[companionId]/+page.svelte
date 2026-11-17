@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatAge } from '$lib/age';
 	import type { PageData } from './$types';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
 	import WeightSparkline from '$lib/components/WeightSparkline.svelte';
@@ -50,17 +51,7 @@
 
 	const locale = getLocale();
 
-	function age(dob: string | null): string {
-		if (!dob) return 'Unknown age';
-		const birth = new Date(dob);
-		const now = new Date();
-		const months =
-			(now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
-		if (months < 12) return `${months}mo old`;
-		const y = Math.floor(months / 12);
-		const m = months % 12;
-		return m > 0 ? `${y}y ${m}mo` : `${y}y old`;
-	}
+	const age = (dob: string | null) => formatAge(dob, locale);
 
 	let today = localDateISO();
 
