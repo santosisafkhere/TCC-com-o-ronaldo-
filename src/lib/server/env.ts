@@ -477,6 +477,10 @@ export function logDemoBootStatus(): void {
 // ("teste") at boot and surface its credentials on the login screen. OFF by
 // default — never enable it on a real deployment, it is a known-password
 // backdoor. Ignored while DEMO_MODE is on (that owns the login screen).
+// Open self-registration at /auth/cadastro (default on). Set SIGNUP_ENABLED=false
+// to go back to admin-created accounts only. Never available in demo mode.
+export const SIGNUP_ENABLED = envBool(env.SIGNUP_ENABLED, true) && !DEMO_MODE;
+
 export const TEST_LOGIN_ENABLED = envBool(env.TEST_LOGIN, false) && !DEMO_MODE;
 
 export function logTestLoginBootStatus(): void {

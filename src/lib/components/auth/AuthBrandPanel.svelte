@@ -20,17 +20,19 @@
 
 {#if image}
 	<!-- Banner artwork (wide screens). Phones keep the compact strip below. -->
-	<!-- The aspect ratio makes the row at least as tall as the artwork, so its
-	     bottom row (feature chips) is never cropped; a taller form just widens
-	     the cover crop at the sides. -->
-	<div class="relative hidden aspect-[880/930] overflow-hidden bg-[#3b1a9e] md:block">
+	<!-- The in-flow spacer keeps the row at least as tall as the artwork, so
+	     nothing is cropped. When the form beside it is taller (sign-up), the
+	     cell stretches and the space under the artwork is filled with the same
+	     gradient as the artwork's bottom edge, so it reads as one piece. -->
+	<div class="auth-banner relative hidden overflow-hidden md:block">
+		<div class="aspect-[880/930]" aria-hidden="true"></div>
 		<img
 			src={image}
 			alt={imageAlt}
 			width="880"
 			height="930"
 			fetchpriority="high"
-			class="absolute inset-0 h-full w-full object-cover object-top"
+			class="absolute inset-x-0 top-0 h-auto w-full"
 		/>
 	</div>
 {/if}
@@ -80,3 +82,17 @@
 
 	<p class="relative z-10 hidden text-xs text-white/50 md:block">{footer}</p>
 </div>
+
+<style>
+	/* Sampled from the bottom row of /login-banner.webp. */
+	.auth-banner {
+		background: linear-gradient(
+			90deg,
+			#6731ae 0%,
+			#502799 25%,
+			#4d2687 50%,
+			#5b2d90 75%,
+			#8838ae 100%
+		);
+	}
+</style>

@@ -6,9 +6,11 @@ import { localDateISO } from '$lib/date';
 import { careStatus, type CareStatus } from '$lib/careStatus';
 import { sharedCompanionIds } from '$lib/server/shares';
 
-export const load: LayoutServerLoad = async ({ locals }) => {
+export const load: LayoutServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
-		redirect(302, '/auth/login');
+		// Visitors landing on the site root see the public landing page; deep
+		// links into the app still go straight to the login form.
+		redirect(302, url.pathname === '/' ? '/conheca' : '/auth/login');
 	}
 
 	// Caretakers have their own layout: boot them to /care
@@ -23,10 +25,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	if (locals.user.role !== 'admin') {
 		const sharedIds = await sharedCompanionIds(locals.user.id);
 		visibilityFilter = sharedIds.length
-			? or(
-					eq(schema.companions.ownerId, locals.user.id),
-					inArray(schema.companions.id, sharedIds)
-				)
+			? or(eq(schema.companions.ownerId, locals.user.id), inArray(schema.companions.id, sharedIds))
 			: eq(schema.companions.ownerId, locals.user.id);
 	}
 

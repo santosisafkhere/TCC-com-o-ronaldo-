@@ -165,6 +165,14 @@
 					</Select>
 				</div>
 			</div>
+			<p class="mt-5 text-center text-sm text-muted-foreground">
+				{t(locale, 'page.login.noAccount')}
+				<a href="/auth/cadastro" class="font-semibold text-primary hover:underline"
+					>{t(locale, 'page.login.signupLink')}</a
+				>
+				·
+				<a href="/conheca" class="hover:underline">{t(locale, 'page.login.learnMore')}</a>
+			</p>
 		</div>
 	</div>
 </div>
