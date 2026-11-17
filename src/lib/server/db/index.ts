@@ -24,8 +24,23 @@ export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 const MIGRATIONS_DIR = './drizzle';
 // process.env wins (production, tests); `vite dev` only exposes .env through
 // SvelteKit's env module, so fall back to that.
-const rawUrl = (process.env.DATABASE_URL ?? env.DATABASE_URL ?? '').trim();
+const rawUrl = cleanDatabaseUrl((process.env.DATABASE_URL ?? env.DATABASE_URL ?? '').trim());
 const isPostgresUrl = /^postgres(ql)?:\/\//i.test(rawUrl);
+
+// Values pasted into a terminal prompt (e.g. `vercel env add`) can carry
+// invisible bracketed-paste control sequences or stray prompt text around the
+// connection string. Keep just the postgres:// URL when one is embedded, and
+// say so in the log (without printing the value, which holds a password).
+export function cleanDatabaseUrl(value: string): string {
+	if (/^postgres(ql)?:\/\/[^\s\x00-\x1f\x7f]+$/i.test(value)) return value;
+	const match = value.match(/postgres(?:ql)?:\/\/[^\s\x00-\x1f\x7f"']+/i);
+	if (!match) return value;
+	console.warn(
+		'[einvault] DATABASE_URL had extra characters around the connection string ' +
+			'(often from pasting into a terminal); using only the postgres:// part.'
+	);
+	return match[0];
+}
 
 // Serverless hosts have a read-only, throwaway disk: the embedded database
 // cannot live there. Fail with an explanation in the function logs instead of
@@ -37,7 +52,9 @@ if (isServerless && !isPostgresUrl) {
 	throw new Error(
 		rawUrl
 			? '[einvault] DATABASE_URL must be a postgresql:// connection string on Vercel ' +
-					'(the embedded database cannot run on a read-only filesystem).'
+					'(the embedded database cannot run on a read-only filesystem). The current value ' +
+					`has ${rawUrl.length} characters and starts with char codes ` +
+					`${[...rawUrl.slice(0, 3)].map((c) => c.charCodeAt(0)).join(',')}.`
 			: '[einvault] DATABASE_URL is not set. On Vercel, add it under Project Settings -> ' +
 					'Environment Variables, using the Supabase "Transaction pooler" string ' +
 					'(port 6543), then redeploy.'
