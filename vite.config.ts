@@ -8,6 +8,22 @@ export default defineConfig({
 		host: '127.0.0.1',
 		port: 5173
 	},
+	ssr: {
+		// Bundle these into the server build instead of loading them from
+		// node_modules at runtime. sanitize-html is CommonJS but require()s
+		// htmlparser2, which is ESM-only; Vercel's function loader does not
+		// support require() of ESM (ERR_REQUIRE_ESM), so every page rendering
+		// markdown crashed there. Bundled, the CJS/ESM boundary disappears.
+		noExternal: [
+			'sanitize-html',
+			'htmlparser2',
+			'domhandler',
+			'domutils',
+			'dom-serializer',
+			'entities',
+			'domelementtype'
+		]
+	},
 	test: {
 		include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
 		environment: 'node',

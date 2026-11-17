@@ -21,7 +21,11 @@ const config = {
 		// Vercel sets VERCEL=1 during its builds: emit serverless functions there.
 		// Everywhere else (local, Docker, the e2e suite's `node build`) build a
 		// standalone Node server as before.
-		adapter: process.env.VERCEL ? adapterVercel() : adapterNode({ out: 'build' }),
+		adapter: process.env.VERCEL
+			? // Cap each request at 60 s (default 300 s) so a stuck request fails fast
+				// instead of hanging the page for five minutes.
+				adapterVercel({ maxDuration: 60 })
+			: adapterNode({ out: 'build' }),
 		csp: {
 			mode: 'nonce',
 			directives: {

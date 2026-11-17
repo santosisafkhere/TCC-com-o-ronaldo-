@@ -1,7 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { checkRateLimit, clearRateLimit, purgeExpiredRateLimits } from './rate-limit';
+import {
+	checkRateLimit,
+	clearRateLimit,
+	purgeExpiredRateLimits,
+	rateLimitUpsert
+} from './rate-limit';
 
 describe('checkRateLimit (database-backed)', () => {
+	// Regression: raw-SQL Date parameters reach postgres.js (production) as
+	// Date objects, which it cannot serialize; the in-memory test database
+	// accepts them, so only the generated SQL can catch it here.
+	it('never passes a raw Date into the SQL parameters', () => {
+		const { sql, params } = rateLimitUpsert('t:sql', 60_000).toSQL();
+		const dates = params.filter((p) => p instanceof Date);
+		expect(dates).toHaveLength(0);
+		expect(sql).toContain('::timestamptz');
+	});
+
 	it('allows exactly `limit` attempts per window', async () => {
 		const results = [];
 		for (let i = 0; i < 5; i++) results.push(await checkRateLimit('t:limit', 3));

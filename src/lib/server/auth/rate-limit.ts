@@ -14,24 +14,32 @@ export async function checkRateLimit(
 	limit = 5,
 	windowMs = 15 * 60 * 1000
 ): Promise<boolean> {
-	const now = new Date();
+	const [row] = await rateLimitUpsert(key, windowMs);
+	return (row?.count ?? 1) <= limit;
+}
+
+/** The upsert behind checkRateLimit, exposed so tests can inspect its SQL. */
+export function rateLimitUpsert(key: string, windowMs: number, now = new Date()) {
 	const resetAt = new Date(now.getTime() + windowMs);
 	const t = schema.rateLimits;
-	const expired = sql`${t.resetAt} <= ${now}`;
+	// Raw-SQL parameters bypass the column's date mapping: postgres.js would
+	// send a Date as its toString() ("Tue Nov 17 2026 …"), which Postgres
+	// rejects. Send ISO strings with an explicit cast instead.
+	const nowSql = sql`${now.toISOString()}::timestamptz`;
+	const resetAtSql = sql`${resetAt.toISOString()}::timestamptz`;
+	const expired = sql`${t.resetAt} <= ${nowSql}`;
 
-	const [row] = await db
+	return db
 		.insert(t)
 		.values({ key, count: 1, resetAt })
 		.onConflictDoUpdate({
 			target: t.key,
 			set: {
 				count: sql`CASE WHEN ${expired} THEN 1 ELSE ${t.count} + 1 END`,
-				resetAt: sql`CASE WHEN ${expired} THEN ${resetAt} ELSE ${t.resetAt} END`
+				resetAt: sql`CASE WHEN ${expired} THEN ${resetAtSql} ELSE ${t.resetAt} END`
 			}
 		})
 		.returning({ count: t.count });
-
-	return (row?.count ?? 1) <= limit;
 }
 
 export async function clearRateLimit(key: string): Promise<void> {
