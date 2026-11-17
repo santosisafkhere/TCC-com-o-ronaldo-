@@ -1,9 +1,10 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { db, schema } from '$lib/server/db';
-import { and, eq, inArray, isNull, lte } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lte, or, type SQL } from 'drizzle-orm';
 import { localDateISO } from '$lib/date';
 import { careStatus, type CareStatus } from '$lib/careStatus';
+import { sharedCompanionIds } from '$lib/server/shares';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -15,18 +16,27 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		redirect(302, '/care');
 	}
 
-	// Ownership isolation: members see only the pets they own; admins (platform
-	// operators) see all. Caretakers never reach this layout (redirected above).
-	const ownerFilter =
-		locals.user.role === 'admin' ? undefined : eq(schema.companions.ownerId, locals.user.id);
+	// Ownership isolation: members see the pets they own plus any shared with
+	// them (e.g. a clinic account); admins (platform operators) see all.
+	// Caretakers never reach this layout (redirected above).
+	let visibilityFilter: SQL | undefined;
+	if (locals.user.role !== 'admin') {
+		const sharedIds = await sharedCompanionIds(locals.user.id);
+		visibilityFilter = sharedIds.length
+			? or(
+					eq(schema.companions.ownerId, locals.user.id),
+					inArray(schema.companions.id, sharedIds)
+				)
+			: eq(schema.companions.ownerId, locals.user.id);
+	}
 
 	const [companions, archivedCompanions] = await Promise.all([
 		db.query.companions.findMany({
-			where: and(eq(schema.companions.isActive, true), ownerFilter),
+			where: and(eq(schema.companions.isActive, true), visibilityFilter),
 			orderBy: (c, { asc }) => [asc(c.name)]
 		}),
 		db.query.companions.findMany({
-			where: and(eq(schema.companions.isActive, false), ownerFilter),
+			where: and(eq(schema.companions.isActive, false), visibilityFilter),
 			orderBy: (c, { desc }) => [desc(c.archivedAt)]
 		})
 	]);

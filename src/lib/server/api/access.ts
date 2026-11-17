@@ -1,11 +1,27 @@
 import { db, schema } from '$lib/server/db';
 import { and, eq } from 'drizzle-orm';
 import type { Companion } from '$lib/server/db/schema';
+import { shareNotExpired } from '$lib/server/shares';
+
+// An active (non-expired) share row for this companion + user, or undefined.
+function activeShare(companionId: string, userId: string, now: Date) {
+	return db
+		.select()
+		.from(schema.companionShares)
+		.where(
+			and(
+				eq(schema.companionShares.companionId, companionId),
+				eq(schema.companionShares.granteeUserId, userId),
+				shareNotExpired(now)
+			)
+		)
+		.get();
+}
 
 // Ownership scoping for the REST API. An API key belongs to a user; that user
-// may reach a companion only when they own it or are assigned to it (a shared
-// caretaker/clinic). Returns the companion when access is allowed, else null.
-// Synchronous to match the v1 endpoints' better-sqlite3 style.
+// may reach a companion only when they own it, are assigned to it (a sitter),
+// or have it shared with them (e.g. a clinic). Returns the companion when access
+// is allowed, else null. Synchronous to match the v1 endpoints' style.
 export function companionForApiUser(companionId: string, userId: string): Companion | null {
 	const companion = db
 		.select()
@@ -25,21 +41,31 @@ export function companionForApiUser(companionId: string, userId: string): Compan
 			)
 		)
 		.get();
-	return assigned ? companion : null;
+	if (assigned) return companion;
+
+	return activeShare(companionId, userId, new Date()) ? companion : null;
 }
 
-// Companion ids the API user may see (owned + shared). Used to scope list
-// endpoints without leaking other owners' pets.
+// Companion ids the API user may see (owned + assigned + shared). Used to scope
+// list endpoints without leaking other owners' pets.
 export function visibleCompanionIds(userId: string): string[] {
+	const now = new Date();
 	const owned = db
 		.select({ id: schema.companions.id })
 		.from(schema.companions)
 		.where(eq(schema.companions.ownerId, userId))
 		.all();
-	const shared = db
+	const assigned = db
 		.select({ id: schema.companionCaretakers.companionId })
 		.from(schema.companionCaretakers)
 		.where(eq(schema.companionCaretakers.userId, userId))
 		.all();
-	return [...new Set([...owned.map((r) => r.id), ...shared.map((r) => r.id)])];
+	const shared = db
+		.select({ id: schema.companionShares.companionId })
+		.from(schema.companionShares)
+		.where(and(eq(schema.companionShares.granteeUserId, userId), shareNotExpired(now)))
+		.all();
+	return [
+		...new Set([...owned.map((r) => r.id), ...assigned.map((r) => r.id), ...shared.map((r) => r.id)])
+	];
 }

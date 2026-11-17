@@ -199,13 +199,23 @@ export const companions = sqliteTable(
 		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 		archivedAt: integer('archived_at', { mode: 'timestamp' }),
 		archiveNote: text('archive_note'),
+		// Public profile ("found my pet" page reached by the QR tag). A non-null
+		// token is the owner's opt-in: /p/{token} then shows the pet's name, photo
+		// and a contact phone to anyone holding the link. Null = no public page.
+		// Disabling clears it, so a re-enable issues a fresh link and old tags die.
+		publicToken: text('public_token'),
+		// Set while the pet is reported lost; the public page turns into a
+		// "missing" poster. Null = not lost.
+		lostAt: integer('lost_at', { mode: 'timestamp' }),
+		lostMessage: text('lost_message'),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`)
 	},
 	(t) => [
 		index('companion_active_idx').on(t.isActive),
-		index('companion_owner_idx').on(t.ownerId)
+		index('companion_owner_idx').on(t.ownerId),
+		uniqueIndex('companion_public_token_idx').on(t.publicToken)
 	]
 );
 
@@ -458,6 +468,41 @@ export const companionCaretakers = sqliteTable(
 	})
 );
 
+// companion shares — owner-initiated, scoped, revocable, optionally expiring
+// access grants. Distinct from companion_caretakers (the sitter/shift system):
+// this is how an owner hands a clinic/vet write access to a pet's record while
+// always retaining ownership. Revoke = delete the row. A 'read' share can view;
+// a 'write' share can also add records (but never delete the owner's data nor
+// manage the pet — that stays with the owner/admin).
+export const companionShares = sqliteTable(
+	'companion_shares',
+	{
+		id: text('id').primaryKey(),
+		companionId: text('companion_id')
+			.notNull()
+			.references(() => companions.id, { onDelete: 'cascade' }),
+		// The user the pet is shared with (e.g. a clinic account).
+		granteeUserId: text('grantee_user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		scope: text('scope', { enum: ['read', 'write'] })
+			.notNull()
+			.default('write'),
+		// Who created the share (the owner). Kept for the audit trail; nulled if
+		// that user is removed.
+		createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		// Null = never expires. Access is denied once this is in the past.
+		expiresAt: integer('expires_at', { mode: 'timestamp' })
+	},
+	(t) => [
+		uniqueIndex('companion_share_unique').on(t.companionId, t.granteeUserId),
+		index('companion_share_grantee_idx').on(t.granteeUserId)
+	]
+);
+
 // caretaker shifts
 
 export const caretakerShifts = sqliteTable(
@@ -518,6 +563,7 @@ export type WeightEntry = typeof weightEntries.$inferSelect;
 export type DailyEvent = typeof dailyEvents.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
 export type CompanionCaretaker = typeof companionCaretakers.$inferSelect;
+export type CompanionShare = typeof companionShares.$inferSelect;
 export type CaretakerShift = typeof caretakerShifts.$inferSelect;
 
 // relations
@@ -570,6 +616,23 @@ export const companionCaretakersRelations = relations(companionCaretakers, ({ on
 
 export const caretakerShiftsRelations = relations(caretakerShifts, ({ one }) => ({
 	user: one(users, { fields: [caretakerShifts.userId], references: [users.id] })
+}));
+
+export const companionSharesRelations = relations(companionShares, ({ one }) => ({
+	companion: one(companions, {
+		fields: [companionShares.companionId],
+		references: [companions.id]
+	}),
+	grantee: one(users, {
+		fields: [companionShares.granteeUserId],
+		references: [users.id],
+		relationName: 'shareGrantee'
+	}),
+	creator: one(users, {
+		fields: [companionShares.createdBy],
+		references: [users.id],
+		relationName: 'shareCreator'
+	})
 }));
 
 export const journalEntriesRelations = relations(journalEntries, ({ one, many }) => ({

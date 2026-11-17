@@ -876,6 +876,69 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.restore': 'Ripristina',
 	'page.companion.edit.pageTitle': 'Modifica {name}',
 
+	// Condivisione (il proprietario concede a una clinica/veterinario un accesso limitato e revocabile)
+	'error.shareUserNotFound': 'Nessun utente trovato con questo nome.',
+	'error.shareSelf': 'Sei già il proprietario di questo animale.',
+	'error.shareCaretaker':
+		'I custodi ottengono l’accesso tramite i turni, non tramite la condivisione.',
+	'error.shareExpiryInvalid': 'Scegli una data di scadenza futura.',
+	'share.title': 'Condivisione',
+	'share.description':
+		'Dai accesso a questo animale a una clinica o a un veterinario. Possono aggiungere voci, ma non ne sono mai proprietari né cancellano i tuoi dati — puoi revocare l’accesso in qualsiasi momento.',
+	'share.usernameLabel': 'Nome utente con cui condividere',
+	'share.scopeLabel': 'Accesso',
+	'share.scope.read': 'Solo visualizzazione',
+	'share.scope.write': 'Visualizza e aggiungi voci',
+	'share.expiresLabel': 'Scade (facoltativo)',
+	'share.submit': 'Condividi',
+	'share.none': 'Non ancora condiviso con nessuno.',
+	'share.revoke': 'Revoca',
+	'share.revokeConfirm': 'Revocare questo accesso?',
+	'share.expiresOn': 'scade il {date}',
+	'share.neverExpires': 'senza scadenza',
+	'share.created': 'Accesso concesso.',
+	'share.revoked': 'Accesso revocato.',
+
+	// Lost pet + public QR page
+	'lost.title': 'Animale smarrito e QR',
+	'lost.description':
+		'Attiva una pagina pubblica con nome, foto e un telefono di contatto. Metti il codice QR sulla medaglietta del collare: chi trova il tuo animale lo scansiona e ti contatta. Nessun dato sanitario viene mostrato.',
+	'lost.noContactWarning':
+		'Nessun telefono di contatto impostato. Aggiungi il telefono del contatto di emergenza di questo animale (scheda Custode) o un telefono al tuo profilo, altrimenti chi lo trova non potrà contattarti.',
+	'lost.statusLost': '{name} è segnalato come smarrito dal {date}.',
+	'lost.qrAlt': 'Codice QR della pagina pubblica di {name}',
+	'lost.qrHint':
+		'Stampa questo codice sulla medaglietta del collare. Chiunque abbia il link vede la pagina pubblica.',
+	'lost.downloadQr': 'Scarica QR',
+	'lost.openPoster': 'Apri volantino',
+	'lost.messageLabel': 'Messaggio per chi lo trova (facoltativo)',
+	'lost.messagePlaceholder':
+		"Dove e quando è stato visto l'ultima volta, colore del collare, temperamento…",
+	'lost.updateMessage': 'Aggiorna messaggio',
+	'lost.markLost': 'Segnala come smarrito',
+	'lost.markFound': 'Segnala come ritrovato',
+	'lost.enable': 'Attiva pagina pubblica',
+	'lost.disable': 'Disattiva pagina pubblica',
+	'lost.disableConfirm':
+		'Disattivare la pagina pubblica? Il link e ogni codice QR stampato smetteranno di funzionare definitivamente.',
+	'lost.success.enabled': 'Pagina pubblica attivata.',
+	'lost.success.disabled': 'Pagina pubblica disattivata.',
+	'lost.success.lost':
+		'Segnalato come smarrito. La pagina pubblica ora mostra il volantino di ricerca.',
+	'lost.success.found': 'Segnalato come ritrovato. Bentornato a casa!',
+	'public.lostHeading': 'Smarrito',
+	'public.lostSince': 'Smarrito dal {date}',
+	'public.foundHeading': 'Ciao, sono {name}',
+	'public.lostIntro': 'Mi sono perso. Se mi hai visto o trovato, per favore mettiti in contatto.',
+	'public.foundIntro': 'Se mi hai trovato, per favore avvisa la mia famiglia.',
+	'public.contact': 'Contatto: {name}',
+	'public.call': 'Chiama',
+	'public.whatsapp': 'WhatsApp',
+	'public.whatsappText': 'Ciao! Ho trovato {name}.',
+	'public.noContact': 'Il proprietario non ha ancora aggiunto un telefono di contatto.',
+	'public.scanHint': 'Inquadra il codice con la fotocamera del telefono per aprire questa pagina.',
+	'public.print': 'Stampa volantino',
+
 	// Aria labels
 	'aria.caretakerNav': 'Navigazione custode',
 	'aria.adminNav': 'Sezioni di amministrazione',

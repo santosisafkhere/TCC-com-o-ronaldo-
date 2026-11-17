@@ -10,6 +10,8 @@
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 	let loading = $state(false);
+	let usernameValue = $state('');
+	let passwordValue = $state('');
 	const locale = getLocale();
 
 	function changeLocale(e: Event) {
@@ -79,6 +81,32 @@
 					</div>
 				{/if}
 
+				{#if data.testLogin}
+					<div
+						class="mb-5 rounded-lg border border-dashed border-border bg-muted/40 p-3 text-sm"
+					>
+						<p class="font-medium text-foreground">{t(locale, 'page.login.testLoginTitle')}</p>
+						<p class="mt-0.5 text-muted-foreground">
+							{t(locale, 'page.login.testLoginHint', {
+								username: data.testLogin.username,
+								password: data.testLogin.password
+							})}
+						</p>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							class="mt-2"
+							onclick={() => {
+								usernameValue = data.testLogin!.username;
+								passwordValue = data.testLogin!.password;
+							}}
+						>
+							{t(locale, 'page.login.testLoginFill')}
+						</Button>
+					</div>
+				{/if}
+
 				<form method="POST" onsubmit={() => (loading = true)} class="space-y-4">
 					{#if form?.error}
 						<Alert variant="coral" class="animate-slide-up">
@@ -92,6 +120,7 @@
 							id="username"
 							name="username"
 							type="text"
+							bind:value={usernameValue}
 							placeholder={t(locale, 'page.login.usernamePlaceholder')}
 							required
 							autocomplete="username"
@@ -104,6 +133,7 @@
 							id="password"
 							name="password"
 							type="password"
+							bind:value={passwordValue}
 							placeholder="••••••••"
 							required
 							autocomplete="current-password"

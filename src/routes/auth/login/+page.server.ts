@@ -3,7 +3,8 @@ import type { Actions, PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
 import { isOidcEnabled, getOidcProviderName } from '$lib/server/auth/oidc';
 import { isMailEnabled } from '$lib/server/mail';
-import { DEMO_MODE } from '$lib/server/env';
+import { DEMO_MODE, TEST_LOGIN_ENABLED } from '$lib/server/env';
+import { TEST_LOGIN } from '$lib/server/auth/test-login';
 import { db, schema } from '$lib/server/db';
 import {
 	generateSessionToken,
@@ -40,7 +41,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		oidcEnabled: DEMO_MODE ? false : isOidcEnabled(),
 		oidcProviderName: getOidcProviderName(),
 		oidcError,
-		mailEnabled: DEMO_MODE ? false : isMailEnabled()
+		mailEnabled: DEMO_MODE ? false : isMailEnabled(),
+		// Only surfaced when TEST_LOGIN is enabled (never in production).
+		testLogin: TEST_LOGIN_ENABLED
+			? { username: TEST_LOGIN.username, password: TEST_LOGIN.password }
+			: null
 	};
 };
 

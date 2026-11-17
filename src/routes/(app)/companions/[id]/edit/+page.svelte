@@ -432,6 +432,211 @@
 		</div>
 	{/if}
 
+	<!-- Lost pet + QR tag: opt-in public page a finder reaches by scanning the tag -->
+	<div
+		class={[
+			'rounded-xl border p-4 space-y-4',
+			companion.lostAt ? 'border-coral/60' : 'border-border'
+		].join(' ')}
+	>
+		<div>
+			<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+				{t(locale, 'lost.title')}
+			</p>
+			<p class="text-sm text-muted-foreground mt-0.5">{t(locale, 'lost.description')}</p>
+		</div>
+
+		{#if form?.publicSuccess}
+			<Alert variant="success">
+				<AlertDescription>{t(locale, `lost.success.${form.publicSuccess}`)}</AlertDescription>
+			</Alert>
+		{/if}
+
+		{#if !data.publicProfile.hasContact}
+			<Alert variant="coral">
+				<AlertDescription>{t(locale, 'lost.noContactWarning')}</AlertDescription>
+			</Alert>
+		{/if}
+
+		{#if companion.lostAt}
+			<Alert variant="coral">
+				<AlertDescription>
+					{t(locale, 'lost.statusLost', {
+						name: companion.name,
+						date: new Date(companion.lostAt).toLocaleDateString(locale)
+					})}
+				</AlertDescription>
+			</Alert>
+		{/if}
+
+		{#if data.publicProfile.url && data.publicProfile.qr}
+			<div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+				<img
+					src={data.publicProfile.qr}
+					alt={t(locale, 'lost.qrAlt', { name: companion.name })}
+					class="h-36 w-36 shrink-0 rounded-lg border border-border bg-white p-1"
+				/>
+				<div class="min-w-0 space-y-2 text-center sm:text-left">
+					<p class="text-sm text-muted-foreground">{t(locale, 'lost.qrHint')}</p>
+					<a
+						href={data.publicProfile.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="block text-sm font-medium text-primary underline break-all"
+					>
+						{data.publicProfile.url}
+					</a>
+					<div class="flex flex-wrap justify-center sm:justify-start gap-2">
+						<Button
+							href={data.publicProfile.qr}
+							download="qr-{companion.name}.png"
+							variant="secondary"
+							size="sm"
+						>
+							{t(locale, 'lost.downloadQr')}
+						</Button>
+						{#if companion.lostAt}
+							<Button
+								href={data.publicProfile.url}
+								target="_blank"
+								rel="noopener noreferrer"
+								variant="secondary"
+								size="sm"
+							>
+								{t(locale, 'lost.openPoster')}
+							</Button>
+						{/if}
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<Separator />
+
+		<form method="POST" action="?/markLost" use:enhance class="space-y-3">
+			<div class="space-y-1.5">
+				<Label for="lostMessage">{t(locale, 'lost.messageLabel')}</Label>
+				<textarea
+					id="lostMessage"
+					name="lostMessage"
+					rows="3"
+					maxlength="500"
+					placeholder={t(locale, 'lost.messagePlaceholder')}
+					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>{companion.lostMessage ?? ''}</textarea
+				>
+			</div>
+			<Button type="submit" variant={companion.lostAt ? 'secondary' : 'softDestructive'}>
+				{companion.lostAt ? t(locale, 'lost.updateMessage') : t(locale, 'lost.markLost')}
+			</Button>
+		</form>
+
+		<div class="flex flex-wrap gap-2">
+			{#if companion.lostAt}
+				<form method="POST" action="?/markFound" use:enhance>
+					<Button type="submit">{t(locale, 'lost.markFound')}</Button>
+				</form>
+			{/if}
+			{#if companion.publicToken}
+				<form
+					method="POST"
+					action="?/disablePublic"
+					use:enhance={({ cancel }) => {
+						if (!confirm(t(locale, 'lost.disableConfirm'))) cancel();
+					}}
+				>
+					<Button type="submit" variant="ghost">{t(locale, 'lost.disable')}</Button>
+				</form>
+			{:else}
+				<form method="POST" action="?/enablePublic" use:enhance>
+					<Button type="submit" variant="secondary">{t(locale, 'lost.enable')}</Button>
+				</form>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Sharing: grant a clinic/vet scoped, revocable access -->
+	<div class="rounded-xl border border-border p-4 space-y-4">
+		<div>
+			<p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+				{t(locale, 'share.title')}
+			</p>
+			<p class="text-sm text-muted-foreground mt-0.5">{t(locale, 'share.description')}</p>
+		</div>
+
+		{#if form?.shareError}
+			<Alert variant="coral"><AlertDescription>{form.shareError}</AlertDescription></Alert>
+		{/if}
+		{#if form?.shareSuccess}
+			<Alert variant="success"><AlertDescription>{t(locale, 'share.created')}</AlertDescription></Alert>
+		{/if}
+		{#if form?.revokeSuccess}
+			<Alert variant="success"><AlertDescription>{t(locale, 'share.revoked')}</AlertDescription></Alert>
+		{/if}
+
+		{#if data.shares?.length}
+			<ul class="space-y-2">
+				{#each data.shares as s (s.id)}
+					<li class="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2">
+						<div class="min-w-0">
+							<p class="truncate text-sm font-medium">
+								{s.grantee?.displayName ?? s.grantee?.username}
+							</p>
+							<p class="text-xs text-muted-foreground">
+								{s.scope === 'read'
+									? t(locale, 'share.scope.read')
+									: t(locale, 'share.scope.write')}
+								·
+								{s.expiresAt
+									? t(locale, 'share.expiresOn', {
+											date: new Date(s.expiresAt).toLocaleDateString(locale)
+										})
+									: t(locale, 'share.neverExpires')}
+							</p>
+						</div>
+						<form
+							method="POST"
+							action="?/revokeShare"
+							use:enhance={({ cancel }) => {
+								if (!confirm(t(locale, 'share.revokeConfirm'))) cancel();
+							}}
+						>
+							<input type="hidden" name="shareId" value={s.id} />
+							<Button type="submit" variant="softDestructive" size="sm">
+								{t(locale, 'share.revoke')}
+							</Button>
+						</form>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<p class="text-sm text-muted-foreground">{t(locale, 'share.none')}</p>
+		{/if}
+
+		<Separator />
+
+		<form method="POST" action="?/share" use:enhance class="space-y-4">
+			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div class="space-y-1.5">
+					<Label for="shareUsername">{t(locale, 'share.usernameLabel')}</Label>
+					<Input id="shareUsername" name="username" type="text" autocomplete="off" required />
+				</div>
+				<div class="space-y-1.5">
+					<Label for="shareScope">{t(locale, 'share.scopeLabel')}</Label>
+					<Select id="shareScope" name="scope">
+						<option value="write">{t(locale, 'share.scope.write')}</option>
+						<option value="read">{t(locale, 'share.scope.read')}</option>
+					</Select>
+				</div>
+			</div>
+			<div class="space-y-1.5">
+				<Label for="shareExpiresAt">{t(locale, 'share.expiresLabel')}</Label>
+				<Input id="shareExpiresAt" name="expiresAt" type="date" autocomplete="off" />
+			</div>
+			<Button type="submit" variant="secondary">{t(locale, 'share.submit')}</Button>
+		</form>
+	</div>
+
 	<!-- Archive companion: admin only — outside tab content, always visible -->
 	{#if data.user?.role === 'admin'}
 		<div class="rounded-xl border border-coral/40 p-4 space-y-3">

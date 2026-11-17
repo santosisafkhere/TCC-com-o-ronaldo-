@@ -473,6 +473,19 @@ export function logDemoBootStatus(): void {
 	}
 }
 
+// Development/testing convenience: provision a fixed, well-known member account
+// ("teste") at boot and surface its credentials on the login screen. OFF by
+// default — never enable it on a real deployment, it is a known-password
+// backdoor. Ignored while DEMO_MODE is on (that owns the login screen).
+export const TEST_LOGIN_ENABLED = envBool(env.TEST_LOGIN, false) && !DEMO_MODE;
+
+export function logTestLoginBootStatus(): void {
+	if (!TEST_LOGIN_ENABLED) return;
+	console.warn(
+		'[test-login] TEST_LOGIN is ON — a fixed "teste" account with a published password exists and is shown on the login page. Do NOT use this in production.'
+	);
+}
+
 // Calendar feed: how many days of past events to include (0 = full history).
 export const CALENDAR_FEED_HISTORY_DAYS = envNonNegativeInt(env.CALENDAR_FEED_HISTORY_DAYS, 90);
 

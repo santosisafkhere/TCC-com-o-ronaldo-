@@ -16,7 +16,9 @@ import {
 	logSmtpBootStatus,
 	logNtfyBootStatus,
 	logTwoFactorBootStatus,
-	logDemoBootStatus
+	logDemoBootStatus,
+	TEST_LOGIN_ENABLED,
+	logTestLoginBootStatus
 } from '$lib/server/env';
 import { isDemoBlockedRequest } from '$lib/server/demo';
 import { DATA_DIR } from '$lib/server/paths';
@@ -35,6 +37,7 @@ logSmtpBootStatus();
 logNtfyBootStatus();
 logDemoBootStatus();
 logTwoFactorBootStatus();
+logTestLoginBootStatus();
 
 // Resume any transcode jobs interrupted by a restart and drain the queue. No-op
 // unless VIDEO_TRANSCODE is enabled and ffmpeg is present. Fire and forget.
@@ -50,6 +53,12 @@ if (DEMO_MODE) {
 			});
 		})
 		.catch((err) => console.error('[demo] boot setup failed:', err));
+}
+
+if (TEST_LOGIN_ENABLED) {
+	Promise.all([import('./lib/server/db'), import('./lib/server/auth/test-login')])
+		.then(([{ db }, { ensureTestUser }]) => ensureTestUser(db))
+		.catch((err) => console.error('[test-login] boot seed failed:', err));
 }
 
 // When S3 storage is configured, /api/photos and /api/avatars 302 to the S3

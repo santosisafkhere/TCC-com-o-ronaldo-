@@ -882,6 +882,67 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.restore': 'Wiederherstellen',
 	'page.companion.edit.pageTitle': '{name} bearbeiten',
 
+	// Teilen (Eigentümer gewährt einer Klinik/Tierarztpraxis begrenzten, widerrufbaren Zugriff)
+	'error.shareUserNotFound': 'Kein Benutzer mit diesem Namen gefunden.',
+	'error.shareSelf': 'Dieses Haustier gehört bereits Ihnen.',
+	'error.shareCaretaker': 'Betreuer erhalten Zugriff über Schichten, nicht über Freigaben.',
+	'error.shareExpiryInvalid': 'Wählen Sie ein Ablaufdatum in der Zukunft.',
+	'share.title': 'Teilen',
+	'share.description':
+		'Geben Sie einer Klinik oder Tierarztpraxis Zugriff auf dieses Haustier. Sie können Einträge hinzufügen, sind aber nie Eigentümer und löschen Ihre Daten nicht – Sie können den Zugriff jederzeit widerrufen.',
+	'share.usernameLabel': 'Benutzername zum Teilen',
+	'share.scopeLabel': 'Zugriff',
+	'share.scope.read': 'Nur ansehen',
+	'share.scope.write': 'Ansehen und Einträge hinzufügen',
+	'share.expiresLabel': 'Läuft ab (optional)',
+	'share.submit': 'Teilen',
+	'share.none': 'Noch mit niemandem geteilt.',
+	'share.revoke': 'Widerrufen',
+	'share.revokeConfirm': 'Diesen Zugriff widerrufen?',
+	'share.expiresOn': 'läuft ab am {date}',
+	'share.neverExpires': 'kein Ablauf',
+	'share.created': 'Zugriff gewährt.',
+	'share.revoked': 'Zugriff widerrufen.',
+
+	// Lost pet + public QR page
+	'lost.title': 'Vermisstes Tier & QR',
+	'lost.description':
+		'Aktiviere eine öffentliche Seite mit Name, Foto und einer Kontaktnummer. Bringe den QR-Code an der Halsbandmarke an: Wer dein Tier findet, scannt ihn und erreicht dich. Es werden keine Gesundheitsdaten angezeigt.',
+	'lost.noContactWarning':
+		'Keine Kontaktnummer hinterlegt. Füge die Nummer des Notfallkontakts dieses Tiers (Tab Betreuer) oder eine Nummer in deinem Profil hinzu, sonst kann dich ein Finder nicht erreichen.',
+	'lost.statusLost': '{name} ist seit {date} als vermisst gemeldet.',
+	'lost.qrAlt': 'QR-Code der öffentlichen Seite von {name}',
+	'lost.qrHint':
+		'Drucke diesen Code auf die Halsbandmarke. Jeder mit dem Link sieht die öffentliche Seite.',
+	'lost.downloadQr': 'QR herunterladen',
+	'lost.openPoster': 'Plakat öffnen',
+	'lost.messageLabel': 'Nachricht für den Finder (optional)',
+	'lost.messagePlaceholder': 'Wo und wann zuletzt gesehen, Halsbandfarbe, Wesen…',
+	'lost.updateMessage': 'Nachricht aktualisieren',
+	'lost.markLost': 'Als vermisst melden',
+	'lost.markFound': 'Als gefunden melden',
+	'lost.enable': 'Öffentliche Seite aktivieren',
+	'lost.disable': 'Öffentliche Seite deaktivieren',
+	'lost.disableConfirm':
+		'Öffentliche Seite deaktivieren? Der Link und jeder gedruckte QR-Code funktionieren dann endgültig nicht mehr.',
+	'lost.success.enabled': 'Öffentliche Seite aktiviert.',
+	'lost.success.disabled': 'Öffentliche Seite deaktiviert.',
+	'lost.success.lost': 'Als vermisst gemeldet. Die öffentliche Seite zeigt jetzt das Suchplakat.',
+	'lost.success.found': 'Als gefunden gemeldet. Willkommen zu Hause!',
+	'public.lostHeading': 'Vermisst',
+	'public.lostSince': 'Vermisst seit {date}',
+	'public.foundHeading': 'Hallo, ich bin {name}',
+	'public.lostIntro':
+		'Ich werde vermisst. Wenn du mich gesehen oder gefunden hast, melde dich bitte.',
+	'public.foundIntro': 'Wenn du mich gefunden hast, sag bitte meiner Familie Bescheid.',
+	'public.contact': 'Kontakt: {name}',
+	'public.call': 'Anrufen',
+	'public.whatsapp': 'WhatsApp',
+	'public.whatsappText': 'Hallo! Ich habe {name} gefunden.',
+	'public.noContact': 'Der Besitzer hat noch keine Kontaktnummer hinterlegt.',
+	'public.scanHint': 'Scanne den Code mit der Handykamera, um diese Seite zu öffnen.',
+	'public.print': 'Plakat drucken',
+
 	// Aria labels
 	'aria.caretakerNav': 'Betreuer-Navigation',
 	'aria.adminNav': 'Verwaltungsbereiche',

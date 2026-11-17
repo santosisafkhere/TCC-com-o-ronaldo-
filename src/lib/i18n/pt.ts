@@ -93,6 +93,10 @@ const messages: Record<keyof Messages, string> = {
 	'error.passwordTooLong': 'A palavra-passe deve ter no máximo 128 caracteres.',
 	'error.passwordsMismatch': 'As palavras-passe não coincidem.',
 	'error.usernameAlreadyTaken': 'Nome de utilizador já em uso.',
+	'error.shareUserNotFound': 'Nenhum utilizador encontrado com esse nome.',
+	'error.shareSelf': 'Você já é o dono deste pet.',
+	'error.shareCaretaker': 'Cuidadores recebem acesso pelos turnos, não por compartilhamento.',
+	'error.shareExpiryInvalid': 'Escolha uma data de expiração no futuro.',
 	'error.emailAlreadyTaken': 'Esse e-mail já está em uso.',
 	'error.emailRequired': 'O e-mail é obrigatório.',
 	'error.emailInvalid': 'Digite um e-mail válido.',
@@ -878,6 +882,64 @@ const messages: Record<keyof Messages, string> = {
 	'page.admin.companionRestored': 'Companheiro restaurado com sucesso.',
 	'page.admin.restore': 'Restaurar',
 	'page.companion.edit.pageTitle': 'Editar {name}',
+
+	// Compartilhamento (o dono concede acesso com escopo e revogável a uma clínica/veterinário)
+	'share.title': 'Compartilhamento',
+	'share.description':
+		'Dê acesso a este pet a uma clínica ou veterinário. Eles podem adicionar registros, mas nunca são donos nem apagam seus dados — você pode revogar o acesso a qualquer momento.',
+	'share.usernameLabel': 'Nome de utilizador para compartilhar',
+	'share.scopeLabel': 'Acesso',
+	'share.scope.read': 'Somente visualizar',
+	'share.scope.write': 'Visualizar e adicionar registros',
+	'share.expiresLabel': 'Expira (opcional)',
+	'share.submit': 'Compartilhar',
+	'share.none': 'Ainda não compartilhado com ninguém.',
+	'share.revoke': 'Revogar',
+	'share.revokeConfirm': 'Revogar este acesso?',
+	'share.expiresOn': 'expira em {date}',
+	'share.neverExpires': 'sem expiração',
+	'share.created': 'Acesso concedido.',
+	'share.revoked': 'Acesso revogado.',
+
+	// Lost pet + public QR page
+	'lost.title': 'Pet perdido e QR',
+	'lost.description':
+		'Ative uma página pública com nome, foto e um telefone de contato. Coloque o QR code na plaquinha da coleira: quem encontrar seu pet escaneia e fala com você. Nenhum dado de saúde é exibido.',
+	'lost.noContactWarning':
+		'Nenhum telefone de contato definido. Adicione o telefone do contato de emergência deste pet (aba Cuidador) ou um telefone no seu perfil; sem isso, quem encontrar não consegue falar com você.',
+	'lost.statusLost': '{name} está marcado como perdido desde {date}.',
+	'lost.qrAlt': 'QR code da página pública de {name}',
+	'lost.qrHint':
+		'Imprima este código na plaquinha da coleira. Qualquer pessoa com o link vê a página pública.',
+	'lost.downloadQr': 'Baixar QR',
+	'lost.openPoster': 'Abrir cartaz',
+	'lost.messageLabel': 'Mensagem para quem encontrar (opcional)',
+	'lost.messagePlaceholder':
+		'Onde e quando foi visto pela última vez, cor da coleira, temperamento…',
+	'lost.updateMessage': 'Atualizar mensagem',
+	'lost.markLost': 'Marcar como perdido',
+	'lost.markFound': 'Marcar como encontrado',
+	'lost.enable': 'Ativar página pública',
+	'lost.disable': 'Desativar página pública',
+	'lost.disableConfirm':
+		'Desativar a página pública? O link e qualquer QR code já impresso deixam de funcionar definitivamente.',
+	'lost.success.enabled': 'Página pública ativada.',
+	'lost.success.disabled': 'Página pública desativada.',
+	'lost.success.lost':
+		'Marcado como perdido. A página pública agora mostra o cartaz de procura-se.',
+	'lost.success.found': 'Marcado como encontrado. Que bom que voltou!',
+	'public.lostHeading': 'Procura-se',
+	'public.lostSince': 'Perdido desde {date}',
+	'public.foundHeading': 'Oi, eu sou {name}',
+	'public.lostIntro': 'Estou perdido. Se você me viu ou me encontrou, por favor entre em contato.',
+	'public.foundIntro': 'Se você me encontrou, por favor avise a minha família.',
+	'public.contact': 'Contato: {name}',
+	'public.call': 'Ligar',
+	'public.whatsapp': 'WhatsApp',
+	'public.whatsappText': 'Olá! Encontrei {name}.',
+	'public.noContact': 'O dono ainda não adicionou um telefone de contato.',
+	'public.scanHint': 'Aponte a câmera do celular para o código para abrir esta página.',
+	'public.print': 'Imprimir cartaz',
 
 	// Aria labels
 	'aria.caretakerNav': 'Navegação do cuidador',
