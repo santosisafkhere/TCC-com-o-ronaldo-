@@ -544,12 +544,18 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.sectionAbout': 'Sobre',
 
 	// Page: overview (multi-companion landing)
+	'overview.hero.titleA': 'Tudo do seu pet',
+	'overview.hero.titleB': 'em um só lugar',
+	'overview.hero.body': 'Saúde, rotina, cuidados e muito mais para o bem-estar do seu companheiro.',
+	'overview.tile.routine': 'Rotina',
+	'overview.tile.care': 'Cuidados',
+	'overview.tile.choose': 'Abrir para qual pet?',
 	'overview.title': 'Resumo',
 	'overview.greeting': 'Olá, {name}',
 	'overview.needsAttention': 'Requer atenção',
 	'overview.allCaughtUp': 'Tudo em dia',
 	'overview.heading.companions': 'Os seus companheiros',
-	'overview.companions.addStart': 'Iniciar novo registo',
+	'overview.companions.addStart': 'Iniciar novo registro',
 	'overview.firstRun.title': 'Bem-vindo ao Achei Meu Pet',
 	'overview.firstRun.body':
 		'Adiciona o teu primeiro companheiro para iniciar o registo de saúde, o diário e os cuidados diários.',

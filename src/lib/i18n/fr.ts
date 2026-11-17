@@ -542,6 +542,12 @@ const messages: Record<keyof Messages, string> = {
 	'page.companion.edit.sectionAbout': 'À propos',
 
 	// Page: overview (multi-companion landing)
+	'overview.hero.titleA': 'Tout sur votre animal',
+	'overview.hero.titleB': 'au même endroit',
+	'overview.hero.body': 'Santé, routine, soins et bien plus pour le bien-être de votre compagnon.',
+	'overview.tile.routine': 'Routine',
+	'overview.tile.care': 'Soins',
+	'overview.tile.choose': 'Pour quel animal ?',
 	'overview.title': 'Aperçu',
 	'overview.greeting': 'Bonjour, {name}',
 	'overview.needsAttention': 'Nécessite attention',

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import CompanionAvatar from '$lib/components/CompanionAvatar.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import PawLogo from '$lib/components/PawLogo.svelte';
 	import {
 		House,
@@ -23,7 +24,12 @@
 	import type { CareStatus } from '$lib/careStatus';
 
 	type Companion = { id: string; name: string; avatarPath?: string | null };
-	type User = { id: string; role: 'admin' | 'member' | 'caretaker' };
+	type User = {
+		id: string;
+		displayName: string;
+		role: 'admin' | 'member' | 'caretaker';
+		avatarPath?: string | null;
+	};
 
 	interface Props {
 		companions: Companion[];
@@ -99,27 +105,41 @@
 	<a
 		{href}
 		aria-current={isActive(href) ? 'page' : undefined}
-		class="nav-item group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-colors"
+		class="nav-item group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-[15px] transition-colors"
 	>
 		<Icon class="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
 		<span class="truncate">{label}</span>
 	</a>
 {/snippet}
 
-<nav class="flex h-full w-72 flex-col bg-card" aria-label={t(locale, 'aria.mainNav')}>
+<nav
+	class="drawer-panel relative flex h-full w-72 flex-col overflow-hidden"
+	aria-label={t(locale, 'aria.mainNav')}
+>
 	<!-- Header: brand, pin, close -->
-	<div class="flex h-16 shrink-0 items-center gap-2 border-b border-border px-4">
+	<div class="flex h-20 shrink-0 items-center gap-2 px-4">
 		<a
 			href="/"
 			class="flex min-w-0 flex-1 items-center gap-2.5"
 			aria-label={t(locale, 'aria.einvaultHome')}
 		>
-			<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-				<PawLogo class="h-4 w-4 text-white" />
+			<span class="brand-mark flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+				<PawLogo class="h-5 w-5 text-white" />
 			</span>
-			<span class="font-display truncate text-[17px] font-extrabold tracking-tight text-foreground"
-				>Achei Meu Pet</span
-			>
+			<span class="flex min-w-0 flex-col">
+				<span class="font-display truncate text-[19px] font-extrabold tracking-tight text-white"
+					>Achei Meu Pet</span
+				>
+				<svg class="mt-0.5 h-2 w-24" viewBox="0 0 96 8" aria-hidden="true"
+					><path
+						d="M4 6 C 34 0, 62 0, 92 4"
+						stroke="#a46bf5"
+						stroke-width="3"
+						fill="none"
+						stroke-linecap="round"
+					/></svg
+				>
+			</span>
 		</a>
 		<button
 			type="button"
@@ -143,7 +163,7 @@
 		{/if}
 	</div>
 
-	<div class="flex-1 overflow-y-auto px-3 py-4">
+	<div class="relative z-10 flex-1 overflow-y-auto px-3 py-2">
 		<!-- Pets -->
 		<p class="nav-heading">{t(locale, 'layout.companionsHeading')}</p>
 		<ul class="space-y-0.5">
@@ -152,7 +172,7 @@
 					<a
 						href="/"
 						aria-current={page.url.pathname === '/' ? 'page' : undefined}
-						class="nav-item flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-colors"
+						class="nav-item flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-[15px] transition-colors"
 					>
 						<LayoutGrid class="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
 						{t(locale, 'nav.overview')}
@@ -166,7 +186,7 @@
 						aria-current={activeCompanion?.id === c.id && page.url.pathname === `/${c.id}`
 							? 'page'
 							: undefined}
-						class="nav-item flex items-center gap-3 rounded-lg px-2.5 py-1.5 text-[14px] transition-colors"
+						class="nav-item flex items-center gap-3 rounded-xl px-2.5 py-2 text-[15px] transition-colors"
 						class:is-current-pet={activeCompanion?.id === c.id}
 					>
 						<CompanionAvatar companionId={c.id} avatarPath={c.avatarPath} name={c.name} size="sm" />
@@ -178,7 +198,7 @@
 			<li>
 				<a
 					href="/companions/new"
-					class="nav-item flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-colors"
+					class="nav-item flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-[15px] transition-colors"
 					aria-current={page.url.pathname === '/companions/new' ? 'page' : undefined}
 				>
 					<Plus class="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
@@ -210,12 +230,51 @@
 	</div>
 
 	<!-- Footer: settings and sign out -->
-	<div class="shrink-0 space-y-0.5 border-t border-border px-3 py-3">
+	<!-- Decoration: a big soft paw and the orange-to-violet wave of the brand art -->
+	<PawLogo
+		class="paw-deco pointer-events-none absolute bottom-40 left-1/2 h-20 w-20 -translate-x-1/2"
+	/>
+	<svg
+		class="pointer-events-none absolute inset-x-0 bottom-0 h-56 w-full"
+		viewBox="0 0 288 224"
+		preserveAspectRatio="none"
+		aria-hidden="true"
+	>
+		<defs>
+			<linearGradient id="nav-wave" x1="0" x2="1" y1="0" y2="0">
+				<stop offset="0" stop-color="#ff9a3c" />
+				<stop offset="0.5" stop-color="#c04ef0" />
+				<stop offset="1" stop-color="#7c3aed" />
+			</linearGradient>
+		</defs>
+		<path
+			d="M0 64 C 70 30, 170 30, 288 74 L288 90 C 170 50, 80 52, 0 84 Z"
+			fill="url(#nav-wave)"
+			opacity="0.9"
+		/>
+		<path d="M0 84 C 80 52, 170 50, 288 90 L288 224 L0 224 Z" fill="#3a1670" />
+	</svg>
+
+	<div class="relative z-10 shrink-0 space-y-0.5 px-3 pb-3 pt-2">
+		{#if user}
+			<div class="mb-1 flex items-center gap-3 rounded-xl px-2 py-2">
+				<UserAvatar
+					userId={user.id}
+					displayName={user.displayName}
+					avatarPath={user.avatarPath}
+					size="md"
+				/>
+				<div class="min-w-0">
+					<p class="truncate text-[15px] font-semibold text-white">{user.displayName}</p>
+					<p class="text-xs text-white/60">{t(locale, `enum.role.${user.role}`)}</p>
+				</div>
+			</div>
+		{/if}
 		{@render navLink('/settings', t(locale, 'nav.settings'), Settings)}
 		<form method="POST" action="/auth/logout">
 			<button
 				type="submit"
-				class="nav-item flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-colors"
+				class="nav-item flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-[15px] transition-colors"
 			>
 				<LogOut class="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
 				{t(locale, 'nav.signOut')}
@@ -225,43 +284,50 @@
 </nav>
 
 <style>
+	/* Deep violet panel from the brand art. Fixed colors on purpose: the menu
+	   looks the same in light and dark mode. */
+	.drawer-panel {
+		background: linear-gradient(180deg, #2f1257 0%, #301358 55%, #2f1354 100%);
+		color: rgb(255 255 255 / 0.78);
+	}
+	.brand-mark {
+		background: linear-gradient(135deg, #b44cf0 0%, #ff6b6b 100%);
+		box-shadow: 0 8px 20px -8px rgb(255 107 107 / 0.6);
+	}
 	.nav-heading {
-		padding: 0 0.75rem 0.4rem;
-		font-size: 11px;
+		padding: 0.9rem 0.75rem 0.45rem;
+		font-size: 12px;
 		font-weight: 600;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
-		color: hsl(var(--muted-foreground));
+		color: rgb(255 255 255 / 0.55);
 	}
 	.nav-item {
 		position: relative;
-		color: hsl(var(--muted-foreground));
+		color: rgb(255 255 255 / 0.82);
+		border-radius: 0.85rem;
 	}
 	.nav-item:hover {
-		background: hsl(var(--accent));
-		color: hsl(var(--foreground));
+		background: rgb(255 255 255 / 0.08);
+		color: #fff;
 	}
-	/* Current page: solid tint plus a short bar on the left edge. */
+	/* Current page: the bright violet pill of the mockup. */
 	.nav-item[aria-current='page'] {
-		background: hsl(var(--primary) / 0.1);
-		color: hsl(var(--foreground));
+		background: linear-gradient(90deg, #8b2ff0 0%, #9d4cf5 100%);
+		color: #fff;
 		font-weight: 600;
-	}
-	.nav-item[aria-current='page']::before {
-		content: '';
-		position: absolute;
-		left: -0.75rem;
-		top: 0.45rem;
-		bottom: 0.45rem;
-		width: 3px;
-		border-radius: 0 3px 3px 0;
-		background: hsl(var(--primary));
+		box-shadow: 0 10px 22px -12px #9d4cf5;
 	}
 	.nav-item[aria-current='page'] :global(svg) {
-		color: hsl(var(--primary));
+		color: #fff;
 	}
 	.is-current-pet {
-		color: hsl(var(--foreground));
+		color: #fff;
+		background: rgb(255 255 255 / 0.06);
+	}
+	:global(.paw-deco) {
+		color: #8b4fe0;
+		opacity: 0.55;
 	}
 	.icon-btn {
 		display: flex;
@@ -270,15 +336,15 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: 0.6rem;
-		color: hsl(var(--muted-foreground));
+		color: rgb(255 255 255 / 0.7);
 	}
 	.icon-btn:hover {
-		background: hsl(var(--accent));
-		color: hsl(var(--foreground));
+		background: rgb(255 255 255 / 0.1);
+		color: #fff;
 	}
 	.icon-btn:focus-visible,
 	.nav-item:focus-visible {
-		outline: 2px solid hsl(var(--primary));
+		outline: 2px solid #ffc533;
 		outline-offset: 1px;
 	}
 </style>

@@ -533,6 +533,12 @@ const messages = {
 	'page.companion.edit.sectionAbout': 'About',
 
 	// Page: overview (multi-companion landing)
+	'overview.hero.titleA': 'Everything about your pet',
+	'overview.hero.titleB': 'in one place',
+	'overview.hero.body': "Health, routine, care and more for your companion's wellbeing.",
+	'overview.tile.routine': 'Routine',
+	'overview.tile.care': 'Care',
+	'overview.tile.choose': 'Open for which pet?',
 	'overview.title': 'Overview',
 	'overview.greeting': 'Hello, {name}',
 	'overview.needsAttention': 'Needs attention',

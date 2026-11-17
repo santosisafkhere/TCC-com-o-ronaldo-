@@ -5,8 +5,20 @@
 	import { t, getLocale } from '$lib/i18n';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Plus, Zap, Check, Pencil, Bell, X, House } from '@lucide/svelte';
-	import PageHeader from '$lib/components/PageHeader.svelte';
+	import {
+		Plus,
+		Zap,
+		Check,
+		Pencil,
+		Bell,
+		X,
+		House,
+		PawPrint,
+		HeartPulse,
+		CalendarDays,
+		NotebookText
+	} from '@lucide/svelte';
+	import { formatAge } from '$lib/age';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import Ein from '$lib/components/Ein.svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
@@ -146,20 +158,35 @@
 			.slice(0, 8);
 	});
 
+	// Coloured top edge of each pet card, in turn (violet, amber, pink).
+	const CARD_ACCENTS = ['#a855f7', '#fbbf4a', '#f28bc9'];
+
+	let firstName = $derived(data.user.displayName.split(' ')[0]);
+
+	// Shortcut tiles. With several pets each one asks which pet to open.
+	const TILES = [
+		{ key: 'health', icon: HeartPulse, tone: 'cool', path: (id: string) => `/${id}/health` },
+		{
+			key: 'routine',
+			icon: CalendarDays,
+			tone: 'warm',
+			path: (id: string) => `/${id}/journal/${today}`
+		},
+		{ key: 'care', icon: PawPrint, tone: 'cool', path: (id: string) => `/${id}/reminders` },
+		{ key: 'journal', icon: NotebookText, tone: 'warm', path: (id: string) => `/${id}/journal` }
+	] as const;
+	function tileLabel(key: (typeof TILES)[number]['key']): string {
+		if (key === 'health') return t(locale, 'nav.health');
+		if (key === 'routine') return t(locale, 'overview.tile.routine');
+		if (key === 'care') return t(locale, 'overview.tile.care');
+		return t(locale, 'nav.journal');
+	}
+	let openTile = $state<string | null>(null);
+
 	// Age from DOB string "YYYY-MM-DD"
 	function companionAge(dob: string | null | undefined): string | null {
 		if (!dob) return null;
-		const [y, m, d] = dob.split('-').map(Number);
-		const born = new Date(y, m - 1, d);
-		const now = new Date();
-		const years = now.getFullYear() - born.getFullYear();
-		const adjusted =
-			now < new Date(now.getFullYear(), born.getMonth(), born.getDate()) ? years - 1 : years;
-		if (adjusted < 1) {
-			const months = Math.floor((now.getTime() - born.getTime()) / (30 * 24 * 60 * 60 * 1000));
-			return `${months}mo`;
-		}
-		return `${adjusted}y`;
+		return formatAge(dob, locale);
 	}
 
 	function urgencyLabel(urgency: Urgency): string {
@@ -215,9 +242,9 @@
 	}
 
 	function handleOverviewWindowKey(e: KeyboardEvent) {
-		if (e.key === 'Escape' && detailReminder) {
-			closeReminderDetail();
-		}
+		if (e.key !== 'Escape') return;
+		if (openTile) openTile = null;
+		else if (detailReminder) closeReminderDetail();
 	}
 
 	function trapDetailFocus(e: KeyboardEvent) {
@@ -346,27 +373,58 @@
 	</div>
 {/if}
 
-<div class="space-y-6 pb-20 md:pb-0">
-	<!-- 1. Greeting header -->
-	<PageHeader
-		title={t(locale, 'overview.greeting', { name: data.user.displayName })}
-		tint="primary"
-	>
-		{#snippet icon()}<House class="h-5 w-5" />{/snippet}
-		{#snippet actions()}
-			{#if data.companions.length > 0}
-				<Button href="/companions/new" size="sm" class="shrink-0 gap-1.5">
-					<Plus class="h-4 w-4" />
-					<span class="hidden sm:inline">{t(locale, 'layout.addCompanion')}</span>
-					<span class="sm:hidden">Add</span>
-				</Button>
-			{/if}
-		{/snippet}
-	</PageHeader>
-	<p class="text-sm text-muted-foreground -mt-2">
-		<LocalTime date={new Date()} format="date" /> &middot;
-		{companionCountLabel(data.companions.length)}
-	</p>
+<div class="space-y-7">
+	<!-- 1. Greeting -->
+	<header class="flex flex-wrap items-center gap-4">
+		<span
+			class="ov-home flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
+			aria-hidden="true"
+		>
+			<House class="h-6 w-6" />
+		</span>
+		<div class="min-w-0 flex-1">
+			<h1
+				class="font-display text-3xl font-extrabold tracking-tight text-foreground sm:text-[2.4rem]"
+			>
+				{t(locale, 'overview.greeting', { name: firstName })}!
+			</h1>
+			<p class="mt-1 text-[15px] text-muted-foreground">
+				<LocalTime date={new Date()} format="date" /> &middot;
+				{companionCountLabel(data.companions.length)}
+			</p>
+		</div>
+		{#if data.companions.length > 0}
+			<a
+				href="/companions/new"
+				class="ov-cta inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-[15px] font-semibold text-white sm:w-auto"
+			>
+				<Plus class="h-5 w-5" />
+				{t(locale, 'layout.addCompanion')}
+			</a>
+		{/if}
+	</header>
+
+	<!-- Hero banner -->
+	{#if data.companions.length > 0}
+		<section class="ov-hero relative mt-10 rounded-[2rem] px-7 py-8 text-white sm:px-10 sm:py-10">
+			<div class="relative z-10 max-w-md">
+				<h2
+					class="font-display text-[2rem] font-extrabold leading-[1.05] tracking-tight sm:text-[2.6rem]"
+				>
+					{t(locale, 'overview.hero.titleA')}
+					<span class="block text-[#ffc533]">{t(locale, 'overview.hero.titleB')}</span>
+				</h2>
+				<p class="mt-3 max-w-sm text-white/90">{t(locale, 'overview.hero.body')}</p>
+			</div>
+			<img
+				src="/landing/overview-pets.webp"
+				alt=""
+				width="505"
+				height="250"
+				class="ov-hero-pets pointer-events-none absolute bottom-0 right-6 hidden w-[min(46%,31rem)] md:block"
+			/>
+		</section>
+	{/if}
 
 	<!-- 2. Needs-attention banner (hidden on first run) -->
 	{#if data.companions.length > 0}
@@ -469,12 +527,15 @@
 		</section>
 	{:else}
 		<section>
-			<h2 class="font-display text-lg font-bold text-foreground mb-3">
+			<h2
+				class="font-display mb-4 flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-foreground"
+			>
+				<PawPrint class="h-6 w-6 text-primary" />
 				{t(locale, 'overview.heading.companions')}
 			</h2>
 
-			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-				{#each data.companions as companion (companion.id)}
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+				{#each data.companions as companion, i (companion.id)}
 					{@const age = companionAge(companion.dob)}
 					{@const compReminders = remindersByCompanion[companion.id] ?? []}
 					{@const status = careStatus(
@@ -500,7 +561,8 @@
 								window.location.href = `/${companion.id}`;
 							}
 						}}
-						class="group block rounded-xl border bg-card p-4 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+						style="--card-accent: {CARD_ACCENTS[i % CARD_ACCENTS.length]}"
+						class="ov-card group block cursor-pointer rounded-[1.4rem] bg-card p-5 transition-all duration-150 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					>
 						<!-- Card header: avatar + name + care status badge -->
 						<div class="flex items-center gap-3 mb-3">
@@ -508,12 +570,17 @@
 								companionId={companion.id}
 								avatarPath={companion.avatarPath}
 								name={companion.name}
-								size="md"
+								size="lg"
 							/>
 							<div class="min-w-0 flex-1">
-								<p class="font-semibold text-foreground truncate">{companion.name}</p>
+								<p
+									class="font-display flex items-center gap-1.5 truncate text-xl font-extrabold text-foreground"
+								>
+									{companion.name}
+									<PawPrint class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+								</p>
 								{#if companion.breed || age}
-									<p class="text-xs text-muted-foreground truncate">
+									<p class="truncate text-sm text-muted-foreground">
 										{[companion.breed, age].filter(Boolean).join(' · ')}
 									</p>
 								{/if}
@@ -640,18 +707,80 @@
 						{/if}
 					</div>
 				{/each}
+			</div>
 
-				<!-- Add companion card -->
+			<!-- Add a pet + shortcuts -->
+			<div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
 				<a
 					href="/companions/new"
-					class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border min-h-[130px] text-muted-foreground hover:border-primary hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-4"
+					class="ov-add flex min-h-[150px] flex-col items-center justify-center gap-2 rounded-[1.4rem] p-5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 				>
-					<div class="rounded-xl bg-primary/10 p-2.5">
-						<Plus class="h-5 w-5 text-primary" />
-					</div>
-					<p class="text-sm font-medium">{t(locale, 'layout.addCompanion')}</p>
-					<p class="text-xs">{t(locale, 'overview.companions.addStart')}</p>
+					<span
+						class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary"
+					>
+						<Plus class="h-6 w-6" />
+					</span>
+					<span class="font-display text-lg font-extrabold text-foreground"
+						>{t(locale, 'layout.addCompanion')}</span
+					>
+					<span class="text-sm text-muted-foreground"
+						>{t(locale, 'overview.companions.addStart')}</span
+					>
 				</a>
+
+				<div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+					{#each TILES as tile (tile.key)}
+						{@const Icon = tile.icon}
+						<div class="relative">
+							<button
+								type="button"
+								class="ov-tile ov-tile-{tile.tone} flex h-full min-h-[150px] w-full flex-col items-center justify-center gap-3 rounded-[1.4rem] p-4"
+								aria-haspopup="menu"
+								aria-expanded={openTile === tile.key}
+								onclick={() => (openTile = openTile === tile.key ? null : tile.key)}
+							>
+								<Icon class="h-11 w-11" strokeWidth={1.8} />
+								<span class="font-display text-lg font-extrabold text-foreground"
+									>{tileLabel(tile.key)}</span
+								>
+							</button>
+							{#if openTile === tile.key}
+								<button
+									type="button"
+									class="fixed inset-0 z-40 cursor-default"
+									aria-hidden="true"
+									tabindex="-1"
+									onclick={() => (openTile = null)}
+								></button>
+								<div
+									role="menu"
+									tabindex="-1"
+									class="absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-popover py-1.5 shadow-xl"
+									onkeydown={(e) => e.key === 'Escape' && (openTile = null)}
+								>
+									<p class="px-3.5 pb-1 pt-1 text-xs font-medium text-muted-foreground">
+										{t(locale, 'overview.tile.choose')}
+									</p>
+									{#each data.companions as c (c.id)}
+										<a
+											role="menuitem"
+											href={tile.path(c.id)}
+											class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground hover:bg-accent"
+										>
+											<CompanionAvatar
+												companionId={c.id}
+												avatarPath={c.avatarPath}
+												name={c.name}
+												size="sm"
+											/>
+											<span class="truncate">{c.name}</span>
+										</a>
+									{/each}
+								</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
 			</div>
 		</section>
 	{/if}
@@ -716,3 +845,78 @@
 		</section>
 	{/if}
 </div>
+
+<style>
+	.ov-home {
+		background: hsl(var(--primary) / 0.12);
+		color: hsl(var(--primary));
+	}
+	.ov-cta {
+		background: linear-gradient(90deg, #8c2fe8 0%, #c04ef0 55%, #fc7f46 100%);
+		box-shadow: 0 12px 26px -12px #c04ef0;
+		transition: transform 0.15s;
+	}
+	.ov-cta:hover {
+		transform: translateY(-1px);
+	}
+	.ov-hero {
+		background: linear-gradient(100deg, #69319a 0%, #7537ab 45%, #9c55d2 75%, #ba6be9 100%);
+		box-shadow: 0 24px 50px -30px #69319a;
+	}
+	.ov-hero-pets {
+		/* Blend the artwork's left edge into the banner. */
+		-webkit-mask-image: linear-gradient(
+			to right,
+			transparent 0,
+			#000 12%,
+			#000 88%,
+			transparent 100%
+		);
+		mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+	}
+	.ov-card {
+		border: 1px solid hsl(var(--border));
+		border-top: 5px solid var(--card-accent);
+		box-shadow: 0 18px 40px -30px rgb(42 22 96 / 0.45);
+	}
+	.ov-card:hover {
+		box-shadow: 0 22px 44px -28px rgb(42 22 96 / 0.55);
+	}
+	.ov-add {
+		border: 2px dashed hsl(var(--primary) / 0.35);
+		background: hsl(var(--card) / 0.6);
+	}
+	.ov-add:hover {
+		border-color: hsl(var(--primary) / 0.7);
+		background: hsl(var(--card));
+	}
+	.ov-tile {
+		transition:
+			transform 0.15s,
+			box-shadow 0.15s;
+	}
+	.ov-tile:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 16px 30px -22px rgb(42 22 96 / 0.5);
+	}
+	.ov-tile:focus-visible {
+		outline: 2px solid hsl(var(--primary));
+		outline-offset: 2px;
+	}
+	.ov-tile-cool {
+		background: #f1e9fe;
+		color: #7c3aed;
+	}
+	.ov-tile-warm {
+		background: #fff1de;
+		color: #f7860f;
+	}
+	:global(.dark) .ov-tile-cool {
+		background: hsl(262 40% 22%);
+		color: #c4a1ff;
+	}
+	:global(.dark) .ov-tile-warm {
+		background: hsl(30 35% 20%);
+		color: #ffb35c;
+	}
+</style>
