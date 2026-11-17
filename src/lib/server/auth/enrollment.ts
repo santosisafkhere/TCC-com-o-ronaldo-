@@ -30,26 +30,26 @@ export async function confirmEnrollment(userId: string, code: string): Promise<s
 	const res = verifyCode(decryptSecret(user.totpSecret), code);
 	if (!res.valid) return null;
 	const codes = generateBackupCodes();
-	await db.transaction((tx) => {
-		tx.update(schema.users)
+	await db.transaction(async (tx) => {
+		await tx
+			.update(schema.users)
 			.set({ totpEnabledAt: new Date(), totpLastStep: res.step })
-			.where(eq(schema.users.id, userId))
-			.run();
-		tx.delete(schema.totpBackupCodes).where(eq(schema.totpBackupCodes.userId, userId)).run();
-		tx.insert(schema.totpBackupCodes)
-			.values(codes.map((c) => ({ id: randomUUID(), userId, codeHash: hashBackupCode(c) })))
-			.run();
+			.where(eq(schema.users.id, userId));
+		await tx.delete(schema.totpBackupCodes).where(eq(schema.totpBackupCodes.userId, userId));
+		await tx
+			.insert(schema.totpBackupCodes)
+			.values(codes.map((c) => ({ id: randomUUID(), userId, codeHash: hashBackupCode(c) })));
 	});
 	return codes;
 }
 
 export async function regenerateBackupCodes(userId: string): Promise<string[]> {
 	const codes = generateBackupCodes();
-	await db.transaction((tx) => {
-		tx.delete(schema.totpBackupCodes).where(eq(schema.totpBackupCodes.userId, userId)).run();
-		tx.insert(schema.totpBackupCodes)
-			.values(codes.map((c) => ({ id: randomUUID(), userId, codeHash: hashBackupCode(c) })))
-			.run();
+	await db.transaction(async (tx) => {
+		await tx.delete(schema.totpBackupCodes).where(eq(schema.totpBackupCodes.userId, userId));
+		await tx
+			.insert(schema.totpBackupCodes)
+			.values(codes.map((c) => ({ id: randomUUID(), userId, codeHash: hashBackupCode(c) })));
 	});
 	return codes;
 }
@@ -62,23 +62,23 @@ export async function disableTwoFactor(userId: string, code: string): Promise<bo
 		lastStep: user.totpLastStep ?? undefined
 	});
 	if (!res.valid) return false;
-	await db.transaction((tx) => {
-		tx.update(schema.users)
+	await db.transaction(async (tx) => {
+		await tx
+			.update(schema.users)
 			.set({ totpSecret: null, totpEnabledAt: null, totpLastStep: null })
-			.where(eq(schema.users.id, userId))
-			.run();
-		tx.delete(schema.totpBackupCodes).where(eq(schema.totpBackupCodes.userId, userId)).run();
+			.where(eq(schema.users.id, userId));
+		await tx.delete(schema.totpBackupCodes).where(eq(schema.totpBackupCodes.userId, userId));
 	});
 	return true;
 }
 
 /** Admin reset: no code required (escape hatch). */
 export async function adminResetTwoFactor(userId: string): Promise<void> {
-	await db.transaction((tx) => {
-		tx.update(schema.users)
+	await db.transaction(async (tx) => {
+		await tx
+			.update(schema.users)
 			.set({ totpSecret: null, totpEnabledAt: null, totpLastStep: null })
-			.where(eq(schema.users.id, userId))
-			.run();
-		tx.delete(schema.totpBackupCodes).where(eq(schema.totpBackupCodes.userId, userId)).run();
+			.where(eq(schema.users.id, userId));
+		await tx.delete(schema.totpBackupCodes).where(eq(schema.totpBackupCodes.userId, userId));
 	});
 }

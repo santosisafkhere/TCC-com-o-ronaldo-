@@ -1,6 +1,6 @@
 import { fail, redirect, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { db, schema } from '$lib/server/db';
+import { db, schema, lockInTransaction } from '$lib/server/db';
 import {
 	generateSessionToken,
 	createSession,
@@ -54,18 +54,18 @@ export const actions: Actions = {
 		const userId = generateId(15);
 
 		// Wrap user count check and insert in a transaction to prevent TOCTOU race
-		const inserted = db.transaction((tx) => {
-			const [{ value }] = tx.select({ value: count() }).from(schema.users).all();
+		const inserted = await db.transaction(async (tx) => {
+			// Two simultaneous submissions must not both see an empty users table.
+			await lockInTransaction(tx, 'setup:first-user');
+			const [{ value }] = await tx.select({ value: count() }).from(schema.users);
 			if (value > 0) return false;
-			tx.insert(schema.users)
-				.values({
-					id: userId,
-					username,
-					displayName,
-					passwordHash,
-					role: 'admin'
-				})
-				.run();
+			await tx.insert(schema.users).values({
+				id: userId,
+				username,
+				displayName,
+				passwordHash,
+				role: 'admin'
+			});
 			return true;
 		});
 

@@ -29,7 +29,7 @@ async function bootOidcWorld(
 		'.test-data',
 		`oidc-variants-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}`
 	);
-	const dbPath = createSeededDb(dir);
+	const dbPath = await createSeededDb(dir);
 
 	let oidc: OidcFake | null = null;
 	if (withOidc) {

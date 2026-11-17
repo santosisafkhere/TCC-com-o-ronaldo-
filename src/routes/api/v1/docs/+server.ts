@@ -40,7 +40,10 @@ const spec = {
 				properties: {
 					id: { type: 'string' },
 					companionId: { type: 'string' },
-					type: { type: 'string', enum: ['vet_visit', 'vaccination', 'medication', 'procedure', 'other'] },
+					type: {
+						type: 'string',
+						enum: ['vet_visit', 'vaccination', 'medication', 'procedure', 'other']
+					},
 					title: { type: 'string' },
 					notes: { type: 'string', nullable: true },
 					occurredAt: { type: 'string', format: 'date-time' },
@@ -64,7 +67,10 @@ const spec = {
 				properties: {
 					id: { type: 'string' },
 					companionId: { type: 'string' },
-					type: { type: 'string', enum: ['walk', 'meal', 'bathroom', 'treat', 'play', 'grooming', 'other'] },
+					type: {
+						type: 'string',
+						enum: ['walk', 'meal', 'bathroom', 'treat', 'play', 'grooming', 'other']
+					},
 					notes: { type: 'string', nullable: true },
 					durationMinutes: { type: 'integer', nullable: true },
 					loggedAt: { type: 'string', format: 'date-time' }
@@ -100,7 +106,10 @@ const spec = {
 					id: { type: 'string' },
 					companionId: { type: 'string' },
 					title: { type: 'string' },
-					category: { type: 'string', enum: ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other'] },
+					category: {
+						type: 'string',
+						enum: ['receipt', 'invoice', 'medical', 'insurance', 'ownership', 'other']
+					},
 					mimeType: { type: 'string' },
 					sizeBytes: { type: 'integer', nullable: true },
 					createdAt: { type: 'string', format: 'date-time' }
@@ -133,14 +142,29 @@ const spec = {
 				responses: {
 					'200': {
 						description: 'Lista de chaves',
-						content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/ApiKey' } } } } } }
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										data: { type: 'array', items: { $ref: '#/components/schemas/ApiKey' } }
+									}
+								}
+							}
+						}
 					}
 				}
 			},
 			post: {
 				summary: 'Criar chave de API',
 				security: [{ bearerAuth: [] }],
-				requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { name: { type: 'string' } } } } } },
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: { type: 'object', properties: { name: { type: 'string' } } }
+						}
+					}
+				},
 				responses: {
 					'201': { description: 'Chave criada (rawKey retornado apenas uma vez)' }
 				}
@@ -165,14 +189,40 @@ const spec = {
 				responses: {
 					'200': {
 						description: 'Lista de pets',
-						content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/Companion' } } } } } }
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										data: { type: 'array', items: { $ref: '#/components/schemas/Companion' } }
+									}
+								}
+							}
+						}
 					}
 				}
 			},
 			post: {
 				summary: 'Criar pet',
 				security: [{ bearerAuth: [] }],
-				requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { name: { type: 'string' }, species: { type: 'string' }, breed: { type: 'string' }, dob: { type: 'string' }, sex: { type: 'string' }, weightUnit: { type: 'string' } }, required: ['name'] } } } },
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									name: { type: 'string' },
+									species: { type: 'string' },
+									breed: { type: 'string' },
+									dob: { type: 'string' },
+									sex: { type: 'string' },
+									weightUnit: { type: 'string' }
+								},
+								required: ['name']
+							}
+						}
+					}
+				},
 				responses: { '201': { description: 'Pet criado' } }
 			}
 		},
@@ -181,13 +231,34 @@ const spec = {
 				summary: 'Obter pet',
 				security: [{ bearerAuth: [] }],
 				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-				responses: { '200': { description: 'Dados do pet' }, '404': { description: 'Pet n\u00e3o encontrado' } }
+				responses: {
+					'200': { description: 'Dados do pet' },
+					'404': { description: 'Pet n\u00e3o encontrado' }
+				}
 			},
 			put: {
 				summary: 'Atualizar pet',
 				security: [{ bearerAuth: [] }],
 				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-				requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { name: { type: 'string' }, breed: { type: 'string' }, dob: { type: 'string' }, sex: { type: 'string' }, bio: { type: 'string' }, vetName: { type: 'string' }, vetClinic: { type: 'string' }, vetPhone: { type: 'string' } } } } } },
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									name: { type: 'string' },
+									breed: { type: 'string' },
+									dob: { type: 'string' },
+									sex: { type: 'string' },
+									bio: { type: 'string' },
+									vetName: { type: 'string' },
+									vetClinic: { type: 'string' },
+									vetPhone: { type: 'string' }
+								}
+							}
+						}
+					}
+				},
 				responses: { '200': { description: 'Pet atualizado' } }
 			},
 			delete: {
@@ -202,53 +273,248 @@ const spec = {
 				summary: 'Listar eventos de sa\u00fade',
 				security: [{ bearerAuth: [] }],
 				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-				responses: { '200': { description: 'Eventos de sa\u00fade', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/HealthEvent' } } } } } } } }
+				responses: {
+					'200': {
+						description: 'Eventos de sa\u00fade',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										data: { type: 'array', items: { $ref: '#/components/schemas/HealthEvent' } }
+									}
+								}
+							}
+						}
+					}
+				}
 			},
 			post: {
 				summary: 'Criar evento de sa\u00fade',
 				security: [{ bearerAuth: [] }],
 				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-				requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { type: { type: 'string' }, title: { type: 'string' }, notes: { type: 'string' }, occurredAt: { type: 'string' }, vetName: { type: 'string' } }, required: ['type', 'title'] } } } },
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									type: { type: 'string' },
+									title: { type: 'string' },
+									notes: { type: 'string' },
+									occurredAt: { type: 'string' },
+									vetName: { type: 'string' }
+								},
+								required: ['type', 'title']
+							}
+						}
+					}
+				},
 				responses: { '201': { description: 'Evento criado' } }
 			}
 		},
 		'/companions/{id}/health-events/{eid}': {
-			get: { summary: 'Obter evento de sa\u00fade', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }, { name: 'eid', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Evento' } } },
-			put: { summary: 'Atualizar evento de sa\u00fade', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }, { name: 'eid', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Evento atualizado' } } },
-			delete: { summary: 'Remover evento de sa\u00fade', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }, { name: 'eid', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Evento removido' } } }
+			get: {
+				summary: 'Obter evento de sa\u00fade',
+				security: [{ bearerAuth: [] }],
+				parameters: [
+					{ name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+					{ name: 'eid', in: 'path', required: true, schema: { type: 'string' } }
+				],
+				responses: { '200': { description: 'Evento' } }
+			},
+			put: {
+				summary: 'Atualizar evento de sa\u00fade',
+				security: [{ bearerAuth: [] }],
+				parameters: [
+					{ name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+					{ name: 'eid', in: 'path', required: true, schema: { type: 'string' } }
+				],
+				responses: { '200': { description: 'Evento atualizado' } }
+			},
+			delete: {
+				summary: 'Remover evento de sa\u00fade',
+				security: [{ bearerAuth: [] }],
+				parameters: [
+					{ name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+					{ name: 'eid', in: 'path', required: true, schema: { type: 'string' } }
+				],
+				responses: { '200': { description: 'Evento removido' } }
+			}
 		},
 		'/companions/{id}/weight-entries': {
-			get: { summary: 'Listar pesos', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Lista de pesos' } } },
-			post: { summary: 'Registrar peso', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { weight: { type: 'number' }, unit: { type: 'string' }, recordedAt: { type: 'string' }, notes: { type: 'string' } }, required: ['weight'] } } } }, responses: { '201': { description: 'Peso registrado' } } }
+			get: {
+				summary: 'Listar pesos',
+				security: [{ bearerAuth: [] }],
+				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+				responses: { '200': { description: 'Lista de pesos' } }
+			},
+			post: {
+				summary: 'Registrar peso',
+				security: [{ bearerAuth: [] }],
+				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									weight: { type: 'number' },
+									unit: { type: 'string' },
+									recordedAt: { type: 'string' },
+									notes: { type: 'string' }
+								},
+								required: ['weight']
+							}
+						}
+					}
+				},
+				responses: { '201': { description: 'Peso registrado' } }
+			}
 		},
 		'/companions/{id}/weight-entries/{wid}': {
-			delete: { summary: 'Remover registro de peso', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }, { name: 'wid', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Registro removido' } } }
+			delete: {
+				summary: 'Remover registro de peso',
+				security: [{ bearerAuth: [] }],
+				parameters: [
+					{ name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+					{ name: 'wid', in: 'path', required: true, schema: { type: 'string' } }
+				],
+				responses: { '200': { description: 'Registro removido' } }
+			}
 		},
 		'/companions/{id}/daily-events': {
-			get: { summary: 'Listar atividades di\u00e1rias', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }, { name: 'type', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Lista de atividades' } } },
-			post: { summary: 'Registrar atividade', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { type: { type: 'string' }, notes: { type: 'string' }, durationMinutes: { type: 'integer' } }, required: ['type'] } } } }, responses: { '201': { description: 'Atividade registrada' } } }
+			get: {
+				summary: 'Listar atividades di\u00e1rias',
+				security: [{ bearerAuth: [] }],
+				parameters: [
+					{ name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+					{ name: 'type', in: 'query', schema: { type: 'string' } }
+				],
+				responses: { '200': { description: 'Lista de atividades' } }
+			},
+			post: {
+				summary: 'Registrar atividade',
+				security: [{ bearerAuth: [] }],
+				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									type: { type: 'string' },
+									notes: { type: 'string' },
+									durationMinutes: { type: 'integer' }
+								},
+								required: ['type']
+							}
+						}
+					}
+				},
+				responses: { '201': { description: 'Atividade registrada' } }
+			}
 		},
 		'/companions/{id}/reminders': {
-			get: { summary: 'Listar lembretes', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Lista de lembretes' } } },
-			post: { summary: 'Criar lembrete', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { title: { type: 'string' }, type: { type: 'string' }, description: { type: 'string' }, dueAt: { type: 'string' }, isRecurring: { type: 'boolean' } }, required: ['title', 'type', 'dueAt'] } } } }, responses: { '201': { description: 'Lembrete criado' } } }
+			get: {
+				summary: 'Listar lembretes',
+				security: [{ bearerAuth: [] }],
+				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+				responses: { '200': { description: 'Lista de lembretes' } }
+			},
+			post: {
+				summary: 'Criar lembrete',
+				security: [{ bearerAuth: [] }],
+				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									title: { type: 'string' },
+									type: { type: 'string' },
+									description: { type: 'string' },
+									dueAt: { type: 'string' },
+									isRecurring: { type: 'boolean' }
+								},
+								required: ['title', 'type', 'dueAt']
+							}
+						}
+					}
+				},
+				responses: { '201': { description: 'Lembrete criado' } }
+			}
 		},
 		'/companions/{id}/reminders/{rid}': {
-			patch: { summary: 'Completar/atualizar lembrete', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }, { name: 'rid', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { completed: { type: 'boolean' } } } } } }, responses: { '200': { description: 'Lembrete atualizado' } } },
-			delete: { summary: 'Remover lembrete', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }, { name: 'rid', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Lembrete removido' } } }
+			patch: {
+				summary: 'Completar/atualizar lembrete',
+				security: [{ bearerAuth: [] }],
+				parameters: [
+					{ name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+					{ name: 'rid', in: 'path', required: true, schema: { type: 'string' } }
+				],
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: { type: 'object', properties: { completed: { type: 'boolean' } } }
+						}
+					}
+				},
+				responses: { '200': { description: 'Lembrete atualizado' } }
+			},
+			delete: {
+				summary: 'Remover lembrete',
+				security: [{ bearerAuth: [] }],
+				parameters: [
+					{ name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+					{ name: 'rid', in: 'path', required: true, schema: { type: 'string' } }
+				],
+				responses: { '200': { description: 'Lembrete removido' } }
+			}
 		},
 		'/companions/{id}/journal-entries': {
-			get: { summary: 'Listar entradas do di\u00e1rio', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Entradas do di\u00e1rio' } } },
-			post: { summary: 'Criar entrada no di\u00e1rio', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { date: { type: 'string', format: 'date' }, body: { type: 'string' }, mood: { type: 'string' } } } } } }, responses: { '201': { description: 'Entrada criada' } } }
+			get: {
+				summary: 'Listar entradas do di\u00e1rio',
+				security: [{ bearerAuth: [] }],
+				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+				responses: { '200': { description: 'Entradas do di\u00e1rio' } }
+			},
+			post: {
+				summary: 'Criar entrada no di\u00e1rio',
+				security: [{ bearerAuth: [] }],
+				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+				requestBody: {
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									date: { type: 'string', format: 'date' },
+									body: { type: 'string' },
+									mood: { type: 'string' }
+								}
+							}
+						}
+					}
+				},
+				responses: { '201': { description: 'Entrada criada' } }
+			}
 		},
 		'/companions/{id}/documents': {
-			get: { summary: 'Listar documentos', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Lista de documentos' } } }
+			get: {
+				summary: 'Listar documentos',
+				security: [{ bearerAuth: [] }],
+				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+				responses: { '200': { description: 'Lista de documentos' } }
+			}
 		}
 	}
 };
 
 import { json } from '@sveltejs/kit';
 
-export function GET({ url }) {
+export async function GET({ url }) {
 	if (url.searchParams.has('spec')) {
 		return json(spec);
 	}

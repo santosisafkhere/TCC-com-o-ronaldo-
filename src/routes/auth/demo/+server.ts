@@ -17,7 +17,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	if (!DEMO_MODE) error(404, 'Not found');
 
 	const ip = getClientAddress();
-	if (!checkRateLimit(`demo:${ip}`, 30)) error(429, 'Too many requests');
+	if (!(await checkRateLimit(`demo:${ip}`, 30))) error(429, 'Too many requests');
 
 	const form = await request.formData();
 	const role = String(form.get('role') ?? '');

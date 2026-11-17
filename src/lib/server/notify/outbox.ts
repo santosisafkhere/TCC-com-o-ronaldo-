@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, lt, notInArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, lt, lte, notInArray, or, sql } from 'drizzle-orm';
 import { db, schema } from '$lib/server/db';
 import { generateId } from '$lib/server/utils';
 import type { OutboxPayload, NotificationOutboxRow } from '$lib/server/db/schema';
@@ -85,7 +85,11 @@ export async function claimNext(
 
 		const [claimed] = await db
 			.update(schema.notificationOutbox)
-			.set({ status: 'claimed', attempts: sql`${schema.notificationOutbox.attempts} + 1` })
+			.set({
+				status: 'claimed',
+				claimedAt: new Date(),
+				attempts: sql`${schema.notificationOutbox.attempts} + 1`
+			})
 			.where(
 				and(
 					eq(schema.notificationOutbox.id, candidate.id),
@@ -120,12 +124,29 @@ export async function markFailedOrRequeue(row: ClaimedNotification): Promise<voi
 		.where(eq(schema.notificationOutbox.id, row.id));
 }
 
-/** Boot recovery: rows orphaned mid-send by a crash go back in the queue. */
-export async function recoverOrphanedClaims(): Promise<number> {
+// A claim this old belongs to a run that crashed or timed out: one delivery
+// takes seconds, and a serverless invocation is killed long before this.
+export const STALE_CLAIM_MS = 5 * 60 * 1000;
+
+/**
+ * Rows orphaned mid-send by a crash go back in the queue. Only claims older
+ * than `staleAfterMs` are touched; pass 0 at boot of a single-process
+ * deployment, where nothing can still be in flight.
+ */
+export async function recoverOrphanedClaims(staleAfterMs = STALE_CLAIM_MS): Promise<number> {
+	const cutoff = new Date(Date.now() - staleAfterMs);
 	const reset = await db
 		.update(schema.notificationOutbox)
-		.set({ status: 'queued' })
-		.where(eq(schema.notificationOutbox.status, 'claimed'))
+		.set({ status: 'queued', claimedAt: null })
+		.where(
+			and(
+				eq(schema.notificationOutbox.status, 'claimed'),
+				or(
+					isNull(schema.notificationOutbox.claimedAt),
+					lte(schema.notificationOutbox.claimedAt, cutoff)
+				)
+			)
+		)
 		.returning({ id: schema.notificationOutbox.id });
 	return reset.length;
 }

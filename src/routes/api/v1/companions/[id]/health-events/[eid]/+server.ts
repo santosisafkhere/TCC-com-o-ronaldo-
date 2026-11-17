@@ -5,16 +5,19 @@ import { validateApiKey } from '$lib/server/api/validate';
 import { companionForApiUser } from '$lib/server/api/access';
 import { notFound } from '$lib/server/api/errors';
 
-export function GET({ request, params }) {
-	const auth = validateApiKey(request);
+export async function GET({ request, params }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const event = db
-		.select()
-		.from(schema.healthEvents)
-		.where(and(eq(schema.healthEvents.id, params.eid), eq(schema.healthEvents.companionId, params.id)))
-		.get();
+	const event = (
+		await db
+			.select()
+			.from(schema.healthEvents)
+			.where(
+				and(eq(schema.healthEvents.id, params.eid), eq(schema.healthEvents.companionId, params.id))
+			)
+	)[0];
 
 	if (!event) notFound('Health event');
 
@@ -22,15 +25,18 @@ export function GET({ request, params }) {
 }
 
 export async function PUT({ request, params }) {
-	const auth = validateApiKey(request);
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const existing = db
-		.select()
-		.from(schema.healthEvents)
-		.where(and(eq(schema.healthEvents.id, params.eid), eq(schema.healthEvents.companionId, params.id)))
-		.get();
+	const existing = (
+		await db
+			.select()
+			.from(schema.healthEvents)
+			.where(
+				and(eq(schema.healthEvents.id, params.eid), eq(schema.healthEvents.companionId, params.id))
+			)
+	)[0];
 
 	if (!existing) notFound('Health event');
 
@@ -45,35 +51,36 @@ export async function PUT({ request, params }) {
 	if (body.occurredAt) updateFields.occurredAt = new Date(body.occurredAt);
 
 	if (Object.keys(updateFields).length > 0) {
-		db.update(schema.healthEvents)
+		await db
+			.update(schema.healthEvents)
 			.set(updateFields)
-			.where(eq(schema.healthEvents.id, params.eid))
-			.run();
+			.where(eq(schema.healthEvents.id, params.eid));
 	}
 
-	const event = db
-		.select()
-		.from(schema.healthEvents)
-		.where(eq(schema.healthEvents.id, params.eid))
-		.get();
+	const event = (
+		await db.select().from(schema.healthEvents).where(eq(schema.healthEvents.id, params.eid))
+	)[0];
 
 	return json({ data: event });
 }
 
-export function DELETE({ request, params }) {
-	const auth = validateApiKey(request);
+export async function DELETE({ request, params }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const existing = db
-		.select()
-		.from(schema.healthEvents)
-		.where(and(eq(schema.healthEvents.id, params.eid), eq(schema.healthEvents.companionId, params.id)))
-		.get();
+	const existing = (
+		await db
+			.select()
+			.from(schema.healthEvents)
+			.where(
+				and(eq(schema.healthEvents.id, params.eid), eq(schema.healthEvents.companionId, params.id))
+			)
+	)[0];
 
 	if (!existing) notFound('Health event');
 
-	db.delete(schema.healthEvents).where(eq(schema.healthEvents.id, params.eid)).run();
+	await db.delete(schema.healthEvents).where(eq(schema.healthEvents.id, params.eid));
 
 	return json({ data: { id: params.eid, deleted: true } });
 }

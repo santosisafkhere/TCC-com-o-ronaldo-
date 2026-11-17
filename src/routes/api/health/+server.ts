@@ -5,7 +5,7 @@ import { sql } from 'drizzle-orm';
 
 export const GET: RequestHandler = async () => {
 	try {
-		db.run(sql`SELECT 1`);
+		await db.execute(sql`SELECT 1`);
 		return json({
 			status: 'ok',
 			timestamp: new Date().toISOString(),

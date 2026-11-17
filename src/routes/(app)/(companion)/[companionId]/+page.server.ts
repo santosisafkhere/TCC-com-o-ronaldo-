@@ -112,7 +112,7 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		completeReminder(existing, locals.user.id);
+		await completeReminder(existing, locals.user.id);
 
 		if (andEvent) {
 			const mapped = REMINDER_TO_HEALTH_TYPE[existing.type];

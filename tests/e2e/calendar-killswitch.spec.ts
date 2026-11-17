@@ -19,7 +19,7 @@ const test = base.extend<{ server: AppServer }>({
 			`calfeed-off-${testInfo.workerIndex}-${testInfo.testId}`
 		);
 		const port = await getFreePort();
-		const dbPath = createSeededDb(dir);
+		const dbPath = await createSeededDb(dir);
 		const server = await startAppServer({
 			dbPath,
 			env: { PORT: String(port), CALENDAR_FEED_ENABLED: 'false' }

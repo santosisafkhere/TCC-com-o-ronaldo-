@@ -8,7 +8,7 @@ export interface ApiAuth {
 	keyId: string;
 }
 
-export function validateApiKey(request: Request): ApiAuth | null {
+export async function validateApiKey(request: Request): Promise<ApiAuth | null> {
 	const auth = request.headers.get('authorization');
 	if (!auth || !auth.startsWith('Bearer ')) return null;
 
@@ -18,18 +18,16 @@ export function validateApiKey(request: Request): ApiAuth | null {
 	const prefix = key.slice(0, 11);
 	const hash = encodeHexLowerCase(sha256(new TextEncoder().encode(key)));
 
-	const row = db
-		.select()
-		.from(schema.apiKeys)
-		.where(eq(schema.apiKeys.keyPrefix, prefix))
-		.get();
+	const row = (
+		await db.select().from(schema.apiKeys).where(eq(schema.apiKeys.keyPrefix, prefix))
+	)[0];
 
 	if (!row || row.keyHash !== hash) return null;
 
-	db.update(schema.apiKeys)
+	await db
+		.update(schema.apiKeys)
 		.set({ lastUsedAt: new Date() })
-		.where(eq(schema.apiKeys.id, row.id))
-		.run();
+		.where(eq(schema.apiKeys.id, row.id));
 
 	return { userId: row.userId, keyId: row.id };
 }

@@ -23,7 +23,7 @@ const test = base.extend<{ world: DemoWorld }>({
 		// refreshDemoContent in hooks.server.ts. No createSeededDb here.
 		fs.rmSync(dir, { recursive: true, force: true });
 		fs.mkdirSync(dir, { recursive: true });
-		const dbPath = path.join(dir, 'einvault.db');
+		const dbPath = path.join(dir, 'pgdata');
 
 		const appPort = await getFreePort();
 		let server: AppServer;

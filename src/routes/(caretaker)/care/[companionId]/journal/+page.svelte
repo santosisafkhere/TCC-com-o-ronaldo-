@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shrinkImage } from '$lib/imageShrink';
 	import type { PageData } from './$types';
 	import MarkdownTextarea from '$lib/components/MarkdownTextarea.svelte';
 	import { stripMarkdown } from '$lib/markdown';
@@ -88,7 +89,7 @@
 		uploading = true;
 		try {
 			const fd = new FormData();
-			fd.set('photo', file);
+			fd.set('photo', await shrinkImage(file));
 			const res = await fetch(`/api/companions/${data.companion.id}/journal/${data.today}/photos`, {
 				method: 'POST',
 				body: fd

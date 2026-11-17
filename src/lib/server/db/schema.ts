@@ -1,17 +1,28 @@
-import { sql, relations } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import {
 	integer,
-	sqliteTable,
+	pgSchema,
 	text,
 	uniqueIndex,
 	index,
-	real,
-	primaryKey
-} from 'drizzle-orm/sqlite-core';
+	doublePrecision,
+	primaryKey,
+	boolean,
+	timestamp,
+	jsonb
+} from 'drizzle-orm/pg-core';
+
+// Every table lives in a dedicated Postgres schema instead of `public`, so the
+// app can share a database (e.g. one Supabase project) with other systems
+// without name clashes, and so Supabase's auto-generated Data API — which only
+// exposes `public` by default — never serves these tables.
+export const DB_SCHEMA = 'achei';
+export const appSchema = pgSchema(DB_SCHEMA);
+const pgTable = appSchema.table;
 
 // users
 
-export const users = sqliteTable(
+export const users = pgTable(
 	'users',
 	{
 		id: text('id').primaryKey(),
@@ -22,11 +33,9 @@ export const users = sqliteTable(
 		role: text('role', { enum: ['admin', 'member', 'caretaker'] })
 			.notNull()
 			.default('member'),
-		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
+		isActive: boolean('is_active').notNull().default(true),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		lastLoginAt: timestamp('last_login_at', { withTimezone: true, mode: 'date' }),
 		theme: text('theme', { enum: ['light', 'dark', 'system'] })
 			.notNull()
 			.default('system'),
@@ -41,10 +50,8 @@ export const users = sqliteTable(
 		defaultRecurrenceUnit: text('default_recurrence_unit', {
 			enum: ['day', 'week', 'month', 'year']
 		}),
-		notifyReminderEmail: integer('notify_reminder_email', { mode: 'boolean' })
-			.notNull()
-			.default(false),
-		notifyShiftEmail: integer('notify_shift_email', { mode: 'boolean' }).notNull().default(false),
+		notifyReminderEmail: boolean('notify_reminder_email').notNull().default(false),
+		notifyShiftEmail: boolean('notify_shift_email').notNull().default(false),
 		// ntfy topic name on the site-configured server (env NTFY_URL). A
 		// non-empty topic is the opt-in for push notifications; the user
 		// receives both categories (reminders, shift alerts) within their
@@ -56,7 +63,7 @@ export const users = sqliteTable(
 		avatarStorageKey: text('avatar_storage_key'),
 		// --- 2FA (TOTP) ---
 		totpSecret: text('totp_secret'),
-		totpEnabledAt: integer('totp_enabled_at', { mode: 'timestamp' }),
+		totpEnabledAt: timestamp('totp_enabled_at', { withTimezone: true, mode: 'date' }),
 		totpLastStep: integer('totp_last_step')
 	},
 	(t) => [
@@ -66,44 +73,40 @@ export const users = sqliteTable(
 	]
 );
 
-export const totpBackupCodes = sqliteTable('totp_backup_codes', {
+export const totpBackupCodes = pgTable('totp_backup_codes', {
 	id: text('id').primaryKey(),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
 	codeHash: text('code_hash').notNull(),
-	usedAt: integer('used_at', { mode: 'timestamp' }),
-	createdAt: integer('created_at', { mode: 'timestamp' })
-		.notNull()
-		.default(sql`(unixepoch())`)
+	usedAt: timestamp('used_at', { withTimezone: true, mode: 'date' }),
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 });
 
-export const appSettings = sqliteTable('app_settings', {
+export const appSettings = pgTable('app_settings', {
 	id: text('id').primaryKey().default('singleton'),
 	require2fa: text('require_2fa', { enum: ['off', 'admins', 'everyone'] })
 		.notNull()
 		.default('off'),
-	updatedAt: integer('updated_at', { mode: 'timestamp' }),
+	updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }),
 	updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
 });
 
-export const sessions = sqliteTable(
+export const sessions = pgTable(
 	'sessions',
 	{
 		id: text('id').primaryKey(),
 		userId: text('user_id')
 			.notNull()
 			.references(() => users.id, { onDelete: 'cascade' }),
-		expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		oidcIdTokenHint: text('oidc_id_token_hint')
 	},
 	(t) => [index('session_user_idx').on(t.userId)]
 );
 
-export const passwordResetTokens = sqliteTable(
+export const passwordResetTokens = pgTable(
 	'password_reset_tokens',
 	{
 		// sha256 hex of the raw token — same storage pattern as sessions.id, so a
@@ -112,10 +115,8 @@ export const passwordResetTokens = sqliteTable(
 		userId: text('user_id')
 			.notNull()
 			.references(() => users.id, { onDelete: 'cascade' }),
-		expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`)
+		expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
 	(t) => [index('password_reset_user_idx').on(t.userId)]
 );
@@ -129,7 +130,7 @@ export type OutboxPayload =
 	| { kind: 'shiftStart'; shiftId: string; boundaryEpoch: number }
 	| { kind: 'shiftEnd'; shiftId: string; boundaryEpoch: number };
 
-export const notificationOutbox = sqliteTable(
+export const notificationOutbox = pgTable(
 	'notification_outbox',
 	{
 		id: text('id').primaryKey(),
@@ -143,7 +144,7 @@ export const notificationOutbox = sqliteTable(
 		channel: text('channel', { enum: ['email', 'ntfy', 'apprise'] }).notNull(),
 		// Rendering happens at send time in the recipient's locale; the payload
 		// carries ids only.
-		payload: text('payload', { mode: 'json' }).$type<OutboxPayload>().notNull(),
+		payload: jsonb('payload').$type<OutboxPayload>().notNull(),
 		// queued -> claimed -> sent | skipped | failed; claimed rows orphaned by a
 		// crash are reset to queued at boot. skipped = conditions no longer hold
 		// (reminder completed, user opted out, shift already started) — not an error.
@@ -151,17 +152,28 @@ export const notificationOutbox = sqliteTable(
 			.notNull()
 			.default('queued'),
 		attempts: integer('attempts').notNull().default(0),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		sentAt: integer('sent_at', { mode: 'timestamp' })
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		// When the current claim was taken. Recovery only re-queues claims older
+		// than a few minutes, so overlapping scheduler runs (cron mode, several
+		// serverless instances) never steal each other's in-flight rows.
+		claimedAt: timestamp('claimed_at', { withTimezone: true, mode: 'date' }),
+		sentAt: timestamp('sent_at', { withTimezone: true, mode: 'date' })
 	},
 	(t) => [uniqueIndex('outbox_dedupe_idx').on(t.dedupeKey), index('outbox_status_idx').on(t.status)]
 );
 
+// Fixed-window attempt counters for brute-force throttling (login, 2FA,
+// password reset, OIDC callback). Kept in the database rather than in memory
+// so the limit holds across serverless instances and restarts.
+export const rateLimits = pgTable('rate_limits', {
+	key: text('key').primaryKey(),
+	count: integer('count').notNull(),
+	resetAt: timestamp('reset_at', { withTimezone: true, mode: 'date' }).notNull()
+});
+
 // companions
 
-export const companions = sqliteTable(
+export const companions = pgTable(
 	'companions',
 	{
 		id: text('id').primaryKey(),
@@ -196,8 +208,8 @@ export const companions = sqliteTable(
 		vetPhone: text('vet_phone'),
 		vetClinic: text('vet_clinic'),
 		notesForSitter: text('notes_for_sitter'),
-		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-		archivedAt: integer('archived_at', { mode: 'timestamp' }),
+		isActive: boolean('is_active').notNull().default(true),
+		archivedAt: timestamp('archived_at', { withTimezone: true, mode: 'date' }),
 		archiveNote: text('archive_note'),
 		// Public profile ("found my pet" page reached by the QR tag). A non-null
 		// token is the owner's opt-in: /p/{token} then shows the pet's name, photo
@@ -206,11 +218,9 @@ export const companions = sqliteTable(
 		publicToken: text('public_token'),
 		// Set while the pet is reported lost; the public page turns into a
 		// "missing" poster. Null = not lost.
-		lostAt: integer('lost_at', { mode: 'timestamp' }),
+		lostAt: timestamp('lost_at', { withTimezone: true, mode: 'date' }),
 		lostMessage: text('lost_message'),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`)
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
 	(t) => [
 		index('companion_active_idx').on(t.isActive),
@@ -221,7 +231,7 @@ export const companions = sqliteTable(
 
 // journal
 
-export const journalEntries = sqliteTable(
+export const journalEntries = pgTable(
 	'journal_entries',
 	{
 		id: text('id').primaryKey(),
@@ -231,12 +241,8 @@ export const journalEntries = sqliteTable(
 		date: text('date').notNull(),
 		body: text('body').notNull().default(''),
 		mood: text('mood', { enum: ['great', 'good', 'meh', 'off', 'sick'] }),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		updatedAt: integer('updated_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' }),
 		updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
 	},
@@ -245,7 +251,7 @@ export const journalEntries = sqliteTable(
 	})
 );
 
-export const journalPhotos = sqliteTable(
+export const journalPhotos = pgTable(
 	'journal_photos',
 	{
 		id: text('id').primaryKey(),
@@ -281,9 +287,7 @@ export const journalPhotos = sqliteTable(
 		// Times the worker has attempted this job. Bounds retries so a poison
 		// input can't be requeued forever on every boot.
 		transcodeAttempts: integer('transcode_attempts').notNull().default(0),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
@@ -295,7 +299,7 @@ export const journalPhotos = sqliteTable(
 
 // health log
 
-export const healthEvents = sqliteTable(
+export const healthEvents = pgTable(
 	'health_events',
 	{
 		id: text('id').primaryKey(),
@@ -307,12 +311,10 @@ export const healthEvents = sqliteTable(
 		}).notNull(),
 		title: text('title').notNull(),
 		notes: text('notes'),
-		occurredAt: integer('occurred_at', { mode: 'timestamp' }).notNull(),
+		occurredAt: timestamp('occurred_at', { withTimezone: true, mode: 'date' }).notNull(),
 		vetName: text('vet_name'),
 		vetClinic: text('vet_clinic'),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
@@ -323,7 +325,7 @@ export const healthEvents = sqliteTable(
 
 // companion documents (issue #95)
 
-export const documents = sqliteTable(
+export const documents = pgTable(
 	'documents',
 	{
 		id: text('id').primaryKey(),
@@ -354,9 +356,7 @@ export const documents = sqliteTable(
 		originalName: text('original_name'),
 		mimeType: text('mime_type').notNull(),
 		sizeBytes: integer('size_bytes'),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
@@ -365,20 +365,18 @@ export const documents = sqliteTable(
 	})
 );
 
-export const weightEntries = sqliteTable(
+export const weightEntries = pgTable(
 	'weight_entries',
 	{
 		id: text('id').primaryKey(),
 		companionId: text('companion_id')
 			.notNull()
 			.references(() => companions.id, { onDelete: 'cascade' }),
-		weight: real('weight').notNull(),
+		weight: doublePrecision('weight').notNull(),
 		unit: text('unit', { enum: ['kg', 'lbs'] }).notNull(),
-		recordedAt: integer('recorded_at', { mode: 'timestamp' }).notNull(),
+		recordedAt: timestamp('recorded_at', { withTimezone: true, mode: 'date' }).notNull(),
 		notes: text('notes'),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
@@ -388,7 +386,7 @@ export const weightEntries = sqliteTable(
 
 // daily log
 
-export const dailyEvents = sqliteTable(
+export const dailyEvents = pgTable(
 	'daily_events',
 	{
 		id: text('id').primaryKey(),
@@ -400,10 +398,8 @@ export const dailyEvents = sqliteTable(
 		}).notNull(),
 		notes: text('notes'),
 		durationMinutes: integer('duration_minutes'),
-		loggedAt: integer('logged_at', { mode: 'timestamp' }).notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		loggedAt: timestamp('logged_at', { withTimezone: true, mode: 'date' }).notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' }),
 		eventGroupId: text('event_group_id')
 	},
@@ -416,7 +412,7 @@ export const dailyEvents = sqliteTable(
 
 // reminders
 
-export const reminders = sqliteTable(
+export const reminders = pgTable(
 	'reminders',
 	{
 		id: text('id').primaryKey(),
@@ -428,8 +424,8 @@ export const reminders = sqliteTable(
 		type: text('type', {
 			enum: ['vet', 'medication', 'vaccination', 'grooming', 'other']
 		}).notNull(),
-		dueAt: integer('due_at', { mode: 'timestamp' }).notNull(),
-		isRecurring: integer('is_recurring', { mode: 'boolean' }).notNull().default(false),
+		dueAt: timestamp('due_at', { withTimezone: true, mode: 'date' }).notNull(),
+		isRecurring: boolean('is_recurring').notNull().default(false),
 		recurrenceUnit: text('recurrence_unit', { enum: ['day', 'week', 'month', 'year'] }),
 		recurrenceInterval: integer('recurrence_interval'),
 		recurrenceAnchor: text('recurrence_anchor', {
@@ -437,11 +433,9 @@ export const reminders = sqliteTable(
 		}),
 		recurrenceAnchorValue: integer('recurrence_anchor_value'),
 		seriesId: text('series_id'),
-		completedAt: integer('completed_at', { mode: 'timestamp' }),
+		completedAt: timestamp('completed_at', { withTimezone: true, mode: 'date' }),
 		completedBy: text('completed_by').references(() => users.id, { onDelete: 'set null' }),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		loggedBy: text('logged_by').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => ({
@@ -453,7 +447,7 @@ export const reminders = sqliteTable(
 
 // companion <-> caretaker assignments
 
-export const companionCaretakers = sqliteTable(
+export const companionCaretakers = pgTable(
 	'companion_caretakers',
 	{
 		companionId: text('companion_id')
@@ -474,7 +468,7 @@ export const companionCaretakers = sqliteTable(
 // always retaining ownership. Revoke = delete the row. A 'read' share can view;
 // a 'write' share can also add records (but never delete the owner's data nor
 // manage the pet — that stays with the owner/admin).
-export const companionShares = sqliteTable(
+export const companionShares = pgTable(
 	'companion_shares',
 	{
 		id: text('id').primaryKey(),
@@ -491,11 +485,9 @@ export const companionShares = sqliteTable(
 		// Who created the share (the owner). Kept for the audit trail; nulled if
 		// that user is removed.
 		createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		// Null = never expires. Access is denied once this is in the past.
-		expiresAt: integer('expires_at', { mode: 'timestamp' })
+		expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' })
 	},
 	(t) => [
 		uniqueIndex('companion_share_unique').on(t.companionId, t.granteeUserId),
@@ -505,19 +497,17 @@ export const companionShares = sqliteTable(
 
 // caretaker shifts
 
-export const caretakerShifts = sqliteTable(
+export const caretakerShifts = pgTable(
 	'caretaker_shifts',
 	{
 		id: text('id').primaryKey(),
 		userId: text('user_id')
 			.notNull()
 			.references(() => users.id, { onDelete: 'cascade' }),
-		startAt: integer('start_at', { mode: 'timestamp' }).notNull(),
-		endAt: integer('end_at', { mode: 'timestamp' }).notNull(),
+		startAt: timestamp('start_at', { withTimezone: true, mode: 'date' }).notNull(),
+		endAt: timestamp('end_at', { withTimezone: true, mode: 'date' }).notNull(),
 		notes: text('notes'),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`)
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
 	(t) => ({
 		userIdx: index('shift_user_idx').on(t.userId)
@@ -526,7 +516,7 @@ export const caretakerShifts = sqliteTable(
 
 // API keys for REST API access
 
-export const apiKeys = sqliteTable(
+export const apiKeys = pgTable(
 	'api_keys',
 	{
 		id: text('id').primaryKey(),
@@ -536,10 +526,8 @@ export const apiKeys = sqliteTable(
 		name: text('name').notNull(),
 		keyHash: text('key_hash').notNull(),
 		keyPrefix: text('key_prefix').notNull(),
-		lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`)
+		lastUsedAt: timestamp('last_used_at', { withTimezone: true, mode: 'date' }),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
 	(t) => [index('api_key_user_idx').on(t.userId)]
 );

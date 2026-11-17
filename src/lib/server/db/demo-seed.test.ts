@@ -26,7 +26,7 @@ describe('seedRows', () => {
 	});
 
 	it('populates the Bebop dataset including an active caretaker shift', async () => {
-		seedRows(db as never, { now: 1_700_000_000_000 });
+		await seedRows(db as never, { now: 1_700_000_000_000 });
 		const users = await db.query.users.findMany();
 		const usernames = users.map((u) => u.username).sort();
 		expect(usernames).toContain(SEED.admin.username); // spike
@@ -37,7 +37,7 @@ describe('seedRows', () => {
 	});
 
 	it('seeds a rich dataset: photos, varied moods, weight trend, mixed reminders', async () => {
-		seedRows(db as never, { now: 1_700_000_000_000 });
+		await seedRows(db as never, { now: 1_700_000_000_000 });
 		const photos = await db.query.journalPhotos.findMany();
 		expect(photos.length).toBeGreaterThanOrEqual(5);
 
@@ -61,7 +61,7 @@ describe('seedRows', () => {
 
 	it('photo storageKeys contain the date of their linked journal entry', async () => {
 		const now = 1_700_000_000_000;
-		seedRows(db as never, { now });
+		await seedRows(db as never, { now });
 
 		const photos = await db.query.journalPhotos.findMany();
 		const entries = await db.query.journalEntries.findMany();
@@ -119,14 +119,14 @@ describe('refreshDemoContent', () => {
 
 	it('refuses to run when demoMode is false (fail closed)', async () => {
 		const { refreshDemoContent } = await import('$server/db/demo-seed');
-		expect(() => refreshDemoContent(db, false, DATA_DIR)).toThrow(/DEMO_MODE/);
+		await expect(refreshDemoContent(db, false, DATA_DIR)).rejects.toThrow(/DEMO_MODE/);
 	});
 
 	it('re-seeds content anchored to now after wiping old rows', async () => {
 		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
 		// Seed users first (refreshDemoContent only touches content, not users)
 		await ensureDemoUsers(db);
-		refreshDemoContent(db, true, DATA_DIR);
+		await refreshDemoContent(db, true, DATA_DIR);
 
 		const entries = await db.query.journalEntries.findMany();
 		expect(entries.length).toBeGreaterThan(0);
@@ -143,8 +143,8 @@ describe('refreshDemoContent', () => {
 	it('is idempotent — calling twice leaves one set of content rows', async () => {
 		const { ensureDemoUsers, refreshDemoContent } = await import('$server/db/demo-seed');
 		await ensureDemoUsers(db);
-		refreshDemoContent(db, true, DATA_DIR);
-		refreshDemoContent(db, true, DATA_DIR);
+		await refreshDemoContent(db, true, DATA_DIR);
+		await refreshDemoContent(db, true, DATA_DIR);
 
 		const companions = await db.query.companions.findMany();
 		expect(companions.length).toBe(2); // only Ein and Edward, not doubled

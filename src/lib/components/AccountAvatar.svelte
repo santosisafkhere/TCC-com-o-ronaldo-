@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shrinkImage } from '$lib/imageShrink';
 	import { invalidateAll } from '$app/navigation';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import ImmichPicker from '$lib/components/ImmichPicker.svelte';
@@ -28,7 +29,7 @@
 
 		uploading = true;
 		const fd = new FormData();
-		fd.set('avatar', file);
+		fd.set('avatar', await shrinkImage(file));
 
 		try {
 			const res = await fetch('/api/account/avatar', {

@@ -6,27 +6,26 @@ import { companionForApiUser } from '$lib/server/api/access';
 import { notFound } from '$lib/server/api/errors';
 import crypto from 'crypto';
 
-export function GET({ request, params }) {
-	const auth = validateApiKey(request);
+export async function GET({ request, params }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const rows = db
+	const rows = await db
 		.select()
 		.from(schema.reminders)
 		.where(eq(schema.reminders.companionId, params.id))
-		.orderBy(desc(schema.reminders.dueAt))
-		.all();
+		.orderBy(desc(schema.reminders.dueAt));
 
 	return json({ data: rows });
 }
 
 export async function POST({ request, params }) {
-	const auth = validateApiKey(request);
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	if (!db.select().from(schema.companions).where(eq(schema.companions.id, params.id)).get()) {
+	if (!(await db.select().from(schema.companions).where(eq(schema.companions.id, params.id)))[0]) {
 		notFound('Companion');
 	}
 
@@ -42,7 +41,7 @@ export async function POST({ request, params }) {
 	}
 
 	const id = crypto.randomUUID();
-	db.insert(schema.reminders).values({
+	await db.insert(schema.reminders).values({
 		id,
 		companionId: params.id,
 		title: body.title,
@@ -53,8 +52,8 @@ export async function POST({ request, params }) {
 		recurrenceUnit: body.recurrenceUnit || null,
 		recurrenceInterval: body.recurrenceInterval || null,
 		loggedBy: auth.userId
-	}).run();
+	});
 
-	const reminder = db.select().from(schema.reminders).where(eq(schema.reminders.id, id)).get();
+	const reminder = (await db.select().from(schema.reminders).where(eq(schema.reminders.id, id)))[0];
 	return json({ data: reminder }, { status: 201 });
 }

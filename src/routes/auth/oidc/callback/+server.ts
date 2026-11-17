@@ -16,38 +16,13 @@ import {
 	SESSION_COOKIE_NAME,
 	makeSessionCookieOptions
 } from '$lib/server/auth/session';
-import { db, schema } from '$lib/server/db';
+import { db, schema, lockInTransaction } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { t } from '$lib/i18n';
 import { env } from '$env/dynamic/private';
+import { checkRateLimit } from '$lib/server/auth/rate-limit';
 import { DEMO_MODE } from '$lib/server/env';
-
-// Same in-process rate limiter pattern as the password login route.
-const callbackAttempts = new Map<string, { count: number; resetAt: number }>();
-const MAX_ATTEMPTS = 10;
-const WINDOW_MS = 15 * 60 * 1000;
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-
-let lastCleanup = Date.now();
-
-function checkRateLimit(ip: string): boolean {
-	const now = Date.now();
-	if (now - lastCleanup > CLEANUP_INTERVAL_MS) {
-		for (const [key, val] of callbackAttempts) {
-			if (now > val.resetAt) callbackAttempts.delete(key);
-		}
-		lastCleanup = now;
-	}
-	const record = callbackAttempts.get(ip);
-	if (!record || now > record.resetAt) {
-		callbackAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-		return true;
-	}
-	if (record.count >= MAX_ATTEMPTS) return false;
-	record.count++;
-	return true;
-}
 
 function sanitizeUsername(raw: string): string {
 	return raw
@@ -65,7 +40,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 	const locale = locals.locale;
 	const secure = isSecureRequest(request);
 
-	if (!checkRateLimit(ip)) {
+	if (!(await checkRateLimit(`oidc:${ip}`, 10))) {
 		error(429, t(locale, 'error.tooManyLoginAttempts'));
 	}
 
@@ -118,13 +93,16 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 		| { kind: 'disabled' }
 		| { kind: 'not_provisioned' };
 
-	const txResult: TxResult = db.transaction((tx) => {
+	const txResult: TxResult = await db.transaction(async (tx) => {
+		// Serialize concurrent callbacks for the same identity (find-or-create).
+		await lockInTransaction(tx, `oidc:${iss}:${sub}`);
 		// 1. Find by OIDC subject.
-		const byOidc = tx
-			.select()
-			.from(schema.users)
-			.where(and(eq(schema.users.oidcIssuer, iss), eq(schema.users.oidcSubject, sub)))
-			.get();
+		const byOidc = (
+			await tx
+				.select()
+				.from(schema.users)
+				.where(and(eq(schema.users.oidcIssuer, iss), eq(schema.users.oidcSubject, sub)))
+		)[0];
 
 		if (byOidc) {
 			if (!byOidc.isActive) return { kind: 'disabled' };
@@ -134,32 +112,34 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 			if (adminGroupsConfigured) {
 				role = evaluateRole(idTokenClaims, byOidc.role);
 				if (role !== byOidc.role) {
-					tx.update(schema.users).set({ role }).where(eq(schema.users.id, byOidc.id)).run();
+					await tx.update(schema.users).set({ role }).where(eq(schema.users.id, byOidc.id));
 				}
 			}
-			tx.update(schema.users)
+			await tx
+				.update(schema.users)
 				.set({ lastLoginAt: new Date() })
-				.where(eq(schema.users.id, byOidc.id))
-				.run();
+				.where(eq(schema.users.id, byOidc.id));
 			console.info(`[oidc] linked login sub=${sub} userId=${byOidc.id}`);
 			return { kind: 'ok', userId: byOidc.id, role };
 		}
 
 		// 2. Find by verified email.
 		if (email && emailVerified) {
-			const byEmail = tx.select().from(schema.users).where(eq(schema.users.email, email)).get();
+			const byEmail = (
+				await tx.select().from(schema.users).where(eq(schema.users.email, email))
+			)[0];
 
 			if (byEmail) {
 				if (!byEmail.isActive) return { kind: 'disabled' };
-				tx.update(schema.users)
+				await tx
+					.update(schema.users)
 					.set({ oidcSubject: sub, oidcIssuer: iss, lastLoginAt: new Date() })
-					.where(eq(schema.users.id, byEmail.id))
-					.run();
+					.where(eq(schema.users.id, byEmail.id));
 				let role: 'admin' | 'member' | 'caretaker' = byEmail.role;
 				if (adminGroupsConfigured) {
 					role = evaluateRole(idTokenClaims, byEmail.role);
 					if (role !== byEmail.role) {
-						tx.update(schema.users).set({ role }).where(eq(schema.users.id, byEmail.id)).run();
+						await tx.update(schema.users).set({ role }).where(eq(schema.users.id, byEmail.id));
 					}
 				}
 				console.info(`[oidc] email-linked login sub=${sub} userId=${byEmail.id}`);
@@ -192,11 +172,12 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 		let username = usernameBase;
 		let suffix = 2;
 		while (
-			tx
-				.select({ id: schema.users.id })
-				.from(schema.users)
-				.where(eq(schema.users.username, username))
-				.get()
+			(
+				await tx
+					.select({ id: schema.users.id })
+					.from(schema.users)
+					.where(eq(schema.users.username, username))
+			)[0]
 		) {
 			username = usernameBase + suffix;
 			suffix++;
@@ -209,27 +190,26 @@ export const GET: RequestHandler = async ({ url, cookies, locals, request, getCl
 		// new row rather than crashing on the unique constraint.
 		let insertEmail: string | null = email || null;
 		if (insertEmail) {
-			const emailTaken = tx
-				.select({ id: schema.users.id })
-				.from(schema.users)
-				.where(eq(schema.users.email, insertEmail))
-				.get();
+			const emailTaken = (
+				await tx
+					.select({ id: schema.users.id })
+					.from(schema.users)
+					.where(eq(schema.users.email, insertEmail))
+			)[0];
 			if (emailTaken) insertEmail = null;
 		}
 
-		tx.insert(schema.users)
-			.values({
-				id: newUserId,
-				username,
-				displayName: displayName || username,
-				passwordHash: null,
-				role,
-				email: insertEmail,
-				oidcSubject: sub,
-				oidcIssuer: iss,
-				lastLoginAt: new Date()
-			})
-			.run();
+		await tx.insert(schema.users).values({
+			id: newUserId,
+			username,
+			displayName: displayName || username,
+			passwordHash: null,
+			role,
+			email: insertEmail,
+			oidcSubject: sub,
+			oidcIssuer: iss,
+			lastLoginAt: new Date()
+		});
 
 		console.info(`[oidc] created user sub=${sub} userId=${newUserId} username=${username}`);
 		return { kind: 'ok', userId: newUserId, role };

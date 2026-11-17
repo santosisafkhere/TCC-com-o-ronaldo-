@@ -74,7 +74,7 @@ test.describe('2FA @desktop', () => {
 		const dir = path.join(REPO_ROOT, '.test-data', `2fa-shared-${Date.now()}`);
 		sharedDir = dir;
 		const appPort = await getFreePort();
-		const dbPath = createSeededDb(dir);
+		const dbPath = await createSeededDb(dir);
 		sharedServer = await startAppServer({
 			dbPath,
 			env: {

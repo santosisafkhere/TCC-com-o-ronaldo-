@@ -7,38 +7,12 @@ import { eq } from 'drizzle-orm';
 import { isMailEnabled, sendMail } from '$lib/server/mail';
 import { buildResetEmail } from '$lib/server/mail/templates';
 import { createResetToken, cleanupExpiredResetTokens } from '$lib/server/auth/password-reset';
+import { checkRateLimit } from '$lib/server/auth/rate-limit';
 import { EMAIL_RE } from '$lib/server/validation';
 
 // In-process per-IP limiter, same caveats as the login limiter: state resets on
 // restart, single-instance only. A DB-backed per-user cooldown lives in
 // createResetToken and survives restarts.
-const forgotAttempts = new Map<string, { count: number; resetAt: number }>();
-const MAX_ATTEMPTS = 5;
-const WINDOW_MS = 15 * 60 * 1000;
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-
-let lastCleanup = Date.now();
-
-function checkRateLimit(ip: string): boolean {
-	const now = Date.now();
-
-	if (now - lastCleanup > CLEANUP_INTERVAL_MS) {
-		for (const [key, val] of forgotAttempts) {
-			if (now > val.resetAt) forgotAttempts.delete(key);
-		}
-		lastCleanup = now;
-	}
-
-	const record = forgotAttempts.get(ip);
-	if (!record || now > record.resetAt) {
-		forgotAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-		return true;
-	}
-	if (record.count >= MAX_ATTEMPTS) return false;
-	record.count++;
-	return true;
-}
-
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!isMailEnabled()) redirect(302, '/auth/login');
 	if (locals.user) redirect(302, '/');
@@ -49,7 +23,7 @@ export const actions: Actions = {
 		const locale = locals.locale;
 		if (!isMailEnabled()) redirect(302, '/auth/login');
 
-		if (!checkRateLimit(getClientAddress())) {
+		if (!(await checkRateLimit(`forgot:${getClientAddress()}`, 5))) {
 			return fail(429, { error: t(locale, 'error.tooManyResetRequests') });
 		}
 

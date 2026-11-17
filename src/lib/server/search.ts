@@ -1,4 +1,5 @@
-import { db } from '$lib/server/db';
+import { sql, type SQL } from 'drizzle-orm';
+import { rawRows } from '$lib/server/db';
 
 export const SEARCH_ENTITY_TYPES = [
 	'journal',
@@ -77,21 +78,22 @@ export interface SearchResult {
 }
 
 /**
- * Build an FTS5 MATCH expression from raw user input. Each whitespace token is
- * stripped of double quotes and wrapped as "token"* — quoting renders every
- * FTS5 operator literal, which makes the expression injection-proof. Returns
- * null when nothing searchable remains (caller returns empty results).
+ * Build a Postgres tsquery string from raw user input: every run of letters or
+ * digits becomes a prefix term (`tok:*`) and all terms must match. Anything
+ * else — including every tsquery operator — is dropped, which makes the
+ * expression injection-proof. Returns null when nothing searchable remains
+ * (caller returns empty results).
  */
 export function buildMatchQuery(raw: string): string | null {
-	const trimmed = raw.trim();
-	if (trimmed.length < 2) return null;
-	const tokens = trimmed
+	if (raw.trim().length < 2) return null;
+	const tokens = raw
+		.replace(/[^\p{L}\p{N}]+/gu, ' ')
+		.trim()
 		.split(/\s+/)
-		.map((t) => t.replaceAll('"', ''))
 		.filter((t) => t.length > 0)
-		.map((t) => `"${t}"*`);
+		.map((t) => `${t}:*`);
 	if (tokens.length === 0) return null;
-	return tokens.join(' ');
+	return tokens.join(' & ');
 }
 
 const HREF_BY_TYPE: Record<
@@ -117,43 +119,57 @@ interface SearchRow {
 	event_date: string | null;
 }
 
+// buildFilterClause emits `?` placeholders; turn that into a parameterized
+// drizzle fragment (values are always bound, never inlined).
+function bindPlaceholders(text: string, params: string[]): SQL {
+	const chunks = text.split('?');
+	const parts: SQL[] = [];
+	chunks.forEach((chunk, i) => {
+		parts.push(sql.raw(chunk));
+		if (i < params.length) parts.push(sql`${params[i]}`);
+	});
+	return sql.join(parts);
+}
+
+// \x01/\x02 sentinels around matched terms; the client turns them into <mark>.
+const HEADLINE_OPTIONS =
+	'StartSel=\x01, StopSel=\x02, MaxWords=16, MinWords=6, MaxFragments=1, FragmentDelimiter=…';
+
 /** Members/admins only — the API route gates caretakers out with 403. */
-export function search(filters: SearchFilters): SearchResult[] {
+export async function search(filters: SearchFilters): Promise<SearchResult[]> {
 	const match = buildMatchQuery(filters.text);
 	const fc = buildFilterClause(filters);
+	const filterSql = fc.sql ? bindPlaceholders(fc.sql, fc.params) : null;
 	let rows: SearchRow[];
 
 	if (match) {
-		const where = ['search_index MATCH ?', fc.sql].filter(Boolean).join(' AND ');
-		const stmt = db.$client.prepare(`
+		rows = await rawRows<SearchRow>(sql`
 			SELECT
 				s.entity_type, s.entity_id, s.companion_id, s.event_date, s.title,
-				snippet(search_index, 1, char(1), char(2), '…', 8) AS excerpt,
+				ts_headline('achei.app_search', s.body, q.query, ${HEADLINE_OPTIONS}) AS excerpt,
 				c.name AS companion_name
-			FROM search_index s
-			JOIN companions c ON c.id = s.companion_id
-			WHERE ${where}
-			ORDER BY bm25(search_index), s.event_date DESC
+			FROM achei.search_index s
+			JOIN achei.companions c ON c.id = s.companion_id
+			CROSS JOIN (SELECT to_tsquery('achei.app_search', ${match}) AS query) q
+			WHERE s.tsv @@ q.query ${filterSql ? sql`AND ${filterSql}` : sql``}
+			ORDER BY ts_rank(s.tsv, q.query) DESC, s.event_date DESC
 			LIMIT 20
 		`);
-		rows = stmt.all(match, ...fc.params) as SearchRow[];
-	} else if (hasActiveFilters(filters)) {
-		// Browse: filters only, no MATCH. FTS5 full-scans the virtual table by the
-		// UNINDEXED columns (no B-tree index possible on an FTS5 table — do not
-		// CREATE INDEX). Plain body excerpt (no matched terms to highlight).
-		// Relies on the index only holding data the user can already read.
-		const stmt = db.$client.prepare(`
+	} else if (filterSql && hasActiveFilters(filters)) {
+		// Browse: filters only, no text match. Plain body excerpt (no matched terms
+		// to highlight). Relies on the index only holding data the user can read,
+		// narrowed by allowedCompanionIds.
+		rows = await rawRows<SearchRow>(sql`
 			SELECT
 				s.entity_type, s.entity_id, s.companion_id, s.event_date, s.title,
 				substr(s.body, 1, 80) AS excerpt,
 				c.name AS companion_name
-			FROM search_index s
-			JOIN companions c ON c.id = s.companion_id
-			WHERE ${fc.sql}
+			FROM achei.search_index s
+			JOIN achei.companions c ON c.id = s.companion_id
+			WHERE ${filterSql}
 			ORDER BY s.event_date DESC
 			LIMIT 20
 		`);
-		rows = stmt.all(...fc.params) as SearchRow[];
 	} else {
 		return [];
 	}

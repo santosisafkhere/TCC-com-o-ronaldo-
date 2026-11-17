@@ -5,17 +5,16 @@ import { validateApiKey } from '$lib/server/api/validate';
 import { companionForApiUser } from '$lib/server/api/access';
 import { notFound } from '$lib/server/api/errors';
 
-export function GET({ request, params }) {
-	const auth = validateApiKey(request);
+export async function GET({ request, params }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const rows = db
+	const rows = await db
 		.select()
 		.from(schema.documents)
 		.where(eq(schema.documents.companionId, params.id))
-		.orderBy(desc(schema.documents.createdAt))
-		.all();
+		.orderBy(desc(schema.documents.createdAt));
 
 	return json({ data: rows });
 }

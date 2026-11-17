@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shrinkImage } from '$lib/imageShrink';
 	import type { PageData } from './$types';
 	import { renderMarkdown, stripMarkdown } from '$lib/markdown';
 	import { tick } from 'svelte';
@@ -138,7 +139,7 @@
 		uploading = true;
 		try {
 			const fd = new FormData();
-			fd.set('photo', file);
+			fd.set('photo', await shrinkImage(file));
 			const res = await fetch(`/api/companions/${data.companion.id}/journal/${data.date}/photos`, {
 				method: 'POST',
 				body: fd

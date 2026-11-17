@@ -20,7 +20,7 @@ const test = base.extend<{ world: LimitsWorld }>({
 			'.test-data',
 			`limits-${testInfo.workerIndex}-${testInfo.testId}`
 		);
-		const dbPath = createSeededDb(dir);
+		const dbPath = await createSeededDb(dir);
 		let server: AppServer;
 		try {
 			server = await startAppServer({

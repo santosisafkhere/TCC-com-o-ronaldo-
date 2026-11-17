@@ -126,7 +126,7 @@ describe('completeReminder', () => {
 		} as typeof schema.reminders.$inferInsert);
 		const row = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r1') });
 
-		completeReminder(row!, 'u-rem');
+		await completeReminder(row!, 'u-rem');
 
 		const done = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r1') });
 		expect(done!.completedAt).not.toBeNull();
@@ -155,7 +155,7 @@ describe('completeReminder', () => {
 		const row = await db.query.reminders.findFirst({ where: eq(schema.reminders.id, 'r2') });
 		const countBefore = (await db.query.reminders.findMany()).length;
 
-		completeReminder(row!, 'u-rem');
+		await completeReminder(row!, 'u-rem');
 
 		expect((await db.query.reminders.findMany()).length).toBe(countBefore);
 	});

@@ -23,7 +23,7 @@ const test = base.extend<{ world: OidcWorld }>({
 		);
 		const oidc = await startOidcFake();
 		const appPort = await getFreePort();
-		const dbPath = createSeededDb(dir);
+		const dbPath = await createSeededDb(dir);
 		let server: AppServer;
 		try {
 			server = await startAppServer({

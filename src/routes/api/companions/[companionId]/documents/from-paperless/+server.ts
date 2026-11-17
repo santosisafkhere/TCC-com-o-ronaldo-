@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { assertCanEditCompanion } from '$lib/server/permissions';
 import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { db, schema, lockInTransaction } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { getPaperlessClient, paperlessKey, PAPERLESS_DOC_ID_RE } from '$lib/server/storage';
@@ -67,48 +67,42 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	const documentDate = isValidDate(createdDate) ? createdDate : null;
 	const uploadedBy = locals.user.id;
 
-	const result = db.transaction(
-		(tx) => {
-			// Idempotency guard: the same Paperless doc twice on one companion
-			// is almost certainly a double-click.
-			const dupe = tx
-				.select({ id: schema.documents.id })
-				.from(schema.documents)
-				.where(
-					and(
-						eq(schema.documents.companionId, companionId),
-						eq(schema.documents.storageKey, paperlessKey(paperlessId))
-					)
+	const result = await db.transaction(async (tx) => {
+		await lockInTransaction(tx, `documents:${companionId}`);
+		// Idempotency guard: the same Paperless doc twice on one companion
+		// is almost certainly a double-click.
+		const dupe = await tx
+			.select({ id: schema.documents.id })
+			.from(schema.documents)
+			.where(
+				and(
+					eq(schema.documents.companionId, companionId),
+					eq(schema.documents.storageKey, paperlessKey(paperlessId))
 				)
-				.all();
-			if (dupe.length > 0) return { ok: true as const, existingId: dupe[0].id };
-			const rows = tx
-				.select({ value: count() })
-				.from(schema.documents)
-				.where(eq(schema.documents.companionId, companionId))
-				.all();
-			const docCount = rows[0]?.value ?? 0;
-			if (docCount >= MAX_DOCUMENTS_PER_COMPANION) return { ok: false as const };
-			tx.insert(schema.documents)
-				.values({
-					id: documentId,
-					companionId,
-					filename,
-					provider: 'paperless',
-					storageKey: paperlessKey(paperlessId),
-					title,
-					category,
-					documentDate,
-					originalName: null,
-					mimeType,
-					sizeBytes: null,
-					uploadedBy
-				})
-				.run();
-			return { ok: true as const, existingId: null };
-		},
-		{ behavior: 'immediate' }
-	);
+			);
+		if (dupe.length > 0) return { ok: true as const, existingId: dupe[0].id };
+		const rows = await tx
+			.select({ value: count() })
+			.from(schema.documents)
+			.where(eq(schema.documents.companionId, companionId));
+		const docCount = rows[0]?.value ?? 0;
+		if (docCount >= MAX_DOCUMENTS_PER_COMPANION) return { ok: false as const };
+		await tx.insert(schema.documents).values({
+			id: documentId,
+			companionId,
+			filename,
+			provider: 'paperless',
+			storageKey: paperlessKey(paperlessId),
+			title,
+			category,
+			documentDate,
+			originalName: null,
+			mimeType,
+			sizeBytes: null,
+			uploadedBy
+		});
+		return { ok: true as const, existingId: null };
+	});
 
 	if (!result.ok) {
 		error(

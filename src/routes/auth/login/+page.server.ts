@@ -55,7 +55,7 @@ export const actions: Actions = {
 		const ip = getClientAddress();
 		const locale = locals.locale;
 
-		if (!checkRateLimit(ip, 10)) {
+		if (!(await checkRateLimit(`login:${ip}`, 10))) {
 			return fail(429, { error: t(locale, 'error.tooManyLoginAttempts') });
 		}
 
@@ -84,7 +84,7 @@ export const actions: Actions = {
 			return fail(401, { error: t(locale, 'error.invalidCredentials') });
 		}
 
-		clearRateLimit(ip);
+		await clearRateLimit(`login:${ip}`);
 
 		await db
 			.update(schema.users)

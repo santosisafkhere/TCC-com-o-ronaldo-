@@ -19,7 +19,7 @@ const test = base.extend<{ world: S3World }>({
 	world: async ({}, use, testInfo) => {
 		const dir = path.join(REPO_ROOT, '.test-data', `s3-${testInfo.workerIndex}-${testInfo.testId}`);
 		const fake = await startS3Fake();
-		const dbPath = createSeededDb(dir);
+		const dbPath = await createSeededDb(dir);
 		let server: AppServer;
 		try {
 			server = await startAppServer({

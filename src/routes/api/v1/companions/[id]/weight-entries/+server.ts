@@ -6,27 +6,26 @@ import { companionForApiUser } from '$lib/server/api/access';
 import { notFound } from '$lib/server/api/errors';
 import crypto from 'crypto';
 
-export function GET({ request, params }) {
-	const auth = validateApiKey(request);
+export async function GET({ request, params }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const rows = db
+	const rows = await db
 		.select()
 		.from(schema.weightEntries)
 		.where(eq(schema.weightEntries.companionId, params.id))
-		.orderBy(desc(schema.weightEntries.recordedAt))
-		.all();
+		.orderBy(desc(schema.weightEntries.recordedAt));
 
 	return json({ data: rows });
 }
 
 export async function POST({ request, params }) {
-	const auth = validateApiKey(request);
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	if (!db.select().from(schema.companions).where(eq(schema.companions.id, params.id)).get()) {
+	if (!(await db.select().from(schema.companions).where(eq(schema.companions.id, params.id)))[0]) {
 		notFound('Companion');
 	}
 
@@ -37,7 +36,7 @@ export async function POST({ request, params }) {
 	}
 
 	const id = crypto.randomUUID();
-	db.insert(schema.weightEntries).values({
+	await db.insert(schema.weightEntries).values({
 		id,
 		companionId: params.id,
 		weight: Number(body.weight),
@@ -45,8 +44,10 @@ export async function POST({ request, params }) {
 		recordedAt: body.recordedAt ? new Date(body.recordedAt) : new Date(),
 		notes: body.notes || null,
 		loggedBy: auth.userId
-	}).run();
+	});
 
-	const entry = db.select().from(schema.weightEntries).where(eq(schema.weightEntries.id, id)).get();
+	const entry = (
+		await db.select().from(schema.weightEntries).where(eq(schema.weightEntries.id, id))
+	)[0];
 	return json({ data: entry }, { status: 201 });
 }

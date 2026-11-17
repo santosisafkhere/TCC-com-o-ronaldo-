@@ -82,9 +82,7 @@
 				{/if}
 
 				{#if data.testLogin}
-					<div
-						class="mb-5 rounded-lg border border-dashed border-border bg-muted/40 p-3 text-sm"
-					>
+					<div class="mb-5 rounded-lg border border-dashed border-border bg-muted/40 p-3 text-sm">
 						<p class="font-medium text-foreground">{t(locale, 'page.login.testLoginTitle')}</p>
 						<p class="mt-0.5 text-muted-foreground">
 							{t(locale, 'page.login.testLoginHint', {

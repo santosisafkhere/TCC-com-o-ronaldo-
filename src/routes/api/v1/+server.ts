@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 
-export function GET() {
+export async function GET() {
 	return json({
 		name: 'Achei Meu Pet API',
 		version: 'v1',

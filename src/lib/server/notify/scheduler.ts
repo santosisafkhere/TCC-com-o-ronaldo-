@@ -488,14 +488,43 @@ async function scan(): Promise<void> {
 }
 
 /**
- * Boot entry point. No-op unless SMTP or ntfy is configured. Recovers rows
- * orphaned by a crash, runs one immediate scan, then ticks every minute. The
- * timer is unref'd so it never keeps the process alive.
+ * True when notifications are delivered by an external trigger calling
+ * /api/cron/notify instead of an in-process timer. Serverless hosts (Vercel)
+ * freeze the process between requests, so a timer there would never fire.
+ */
+export function isCronMode(): boolean {
+	return env.NOTIFY_SCHEDULER === 'cron' || !!process.env.VERCEL;
+}
+
+export function isNotifyConfigured(): boolean {
+	return isMailEnabled() || isNtfyEnabled();
+}
+
+/**
+ * One full scheduler pass for the cron endpoint: re-queue stale claims, then
+ * produce, deliver and clean up. Safe to run concurrently with itself:
+ * producers are idempotent (unique dedupe key) and claims are conditional.
+ */
+export async function runNotifyCycle(): Promise<{ recovered: number }> {
+	const recovered = await recoverOrphanedClaims();
+	await scan();
+	return { recovered };
+}
+
+/**
+ * Boot entry point. No-op unless SMTP or ntfy is configured, and in cron mode
+ * (see isCronMode). Recovers rows orphaned by a crash, runs one immediate
+ * scan, then ticks every minute. The timer is unref'd so it never keeps the
+ * process alive.
  */
 export function startNotifyScheduler(): void {
-	if (!isMailEnabled() && !isNtfyEnabled()) return;
+	if (!isNotifyConfigured()) return;
+	if (isCronMode()) {
+		console.info('[notify] cron mode: deliveries run when /api/cron/notify is called');
+		return;
+	}
 	if (timer) return;
-	recoverOrphanedClaims()
+	recoverOrphanedClaims(0)
 		.then((n) => {
 			if (n > 0) console.info(`[notify] recovered ${n} interrupted notification(s)`);
 			return scan();

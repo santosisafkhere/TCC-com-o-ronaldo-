@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { assertCanEditCompanion } from '$lib/server/permissions';
 import { t, type Locale } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { db, schema, lockInTransaction } from '$lib/server/db';
 import { eq, and, count, desc } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import sharp from 'sharp';
@@ -164,38 +164,33 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 		error(502, t(locals.locale, 'error.fileNotFound'));
 	}
 
-	// Count + insert in one immediate transaction so two concurrent uploads
+	// Count + insert in one transaction holding a per-companion lock so two concurrent uploads
 	// cannot both pass the cap check (from-immich TOCTOU pattern).
-	const result = db.transaction(
-		(tx) => {
-			const rows = tx
-				.select({ value: count() })
-				.from(schema.documents)
-				.where(eq(schema.documents.companionId, companionId))
-				.all();
-			const docCount = rows[0]?.value ?? 0;
-			if (docCount >= MAX_DOCUMENTS_PER_COMPANION) return { ok: false as const };
-			tx.insert(schema.documents)
-				.values({
-					id: documentId,
-					companionId,
-					healthEventId,
-					filename,
-					provider: STORAGE_BACKEND,
-					storageKey: key,
-					title,
-					category,
-					documentDate,
-					originalName,
-					mimeType,
-					sizeBytes: processed.length,
-					uploadedBy
-				})
-				.run();
-			return { ok: true as const };
-		},
-		{ behavior: 'immediate' }
-	);
+	const result = await db.transaction(async (tx) => {
+		await lockInTransaction(tx, `documents:${companionId}`);
+		const rows = await tx
+			.select({ value: count() })
+			.from(schema.documents)
+			.where(eq(schema.documents.companionId, companionId));
+		const docCount = rows[0]?.value ?? 0;
+		if (docCount >= MAX_DOCUMENTS_PER_COMPANION) return { ok: false as const };
+		await tx.insert(schema.documents).values({
+			id: documentId,
+			companionId,
+			healthEventId,
+			filename,
+			provider: STORAGE_BACKEND,
+			storageKey: key,
+			title,
+			category,
+			documentDate,
+			originalName,
+			mimeType,
+			sizeBytes: processed.length,
+			uploadedBy
+		});
+		return { ok: true as const };
+	});
 
 	if (!result.ok) {
 		// Cap hit after the object was stored: remove the orphan.

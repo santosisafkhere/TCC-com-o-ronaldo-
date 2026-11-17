@@ -1,1 +1,0 @@
-ALTER TABLE `companions` ADD `medication_schedule` text;

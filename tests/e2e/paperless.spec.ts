@@ -21,7 +21,7 @@ const test = base.extend<{ world: PaperlessWorld }>({
 			`paperless-${testInfo.workerIndex}-${testInfo.testId}`
 		);
 		const fake = await startPaperlessFake();
-		const dbPath = createSeededDb(dir);
+		const dbPath = await createSeededDb(dir);
 		let server: AppServer;
 		try {
 			server = await startAppServer({

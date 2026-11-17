@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import * as schema from '$lib/server/db/schema';
 
 // A fixed, well-known account for local development and manual testing. It is
@@ -16,7 +16,7 @@ export const TEST_LOGIN = {
 // Stable id so re-running the seed never creates duplicates.
 const TEST_USER_ID = 'test-login-user';
 
-type Db = BetterSQLite3Database<typeof schema>;
+type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 
 /**
  * Idempotently ensures the test-login member account exists. Safe to call on

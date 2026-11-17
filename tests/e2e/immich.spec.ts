@@ -21,7 +21,7 @@ const test = base.extend<{ world: ImmichWorld }>({
 			`immich-${testInfo.workerIndex}-${testInfo.testId}`
 		);
 		const fake = await startImmichFake();
-		const dbPath = createSeededDb(dir);
+		const dbPath = await createSeededDb(dir);
 		let server: AppServer;
 		try {
 			server = await startAppServer({

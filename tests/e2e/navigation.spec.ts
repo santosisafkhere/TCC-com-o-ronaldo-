@@ -207,7 +207,7 @@ const offShiftTest = base.extend<{ world: OffShiftWorld }>({
 			`nav-offshift-${testInfo.workerIndex}-${testInfo.testId}`
 		);
 		const appPort = await getFreePort();
-		const dbPath = createSeededDbNoShift(dir);
+		const dbPath = await createSeededDbNoShift(dir);
 		let server: AppServer;
 		try {
 			server = await startAppServer({

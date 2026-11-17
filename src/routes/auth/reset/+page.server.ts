@@ -45,12 +45,12 @@ export const actions: Actions = {
 
 		// One transaction: the password change, token burn, and session sweep
 		// land together or not at all.
-		db.transaction((tx) => {
-			tx.update(schema.users).set({ passwordHash }).where(eq(schema.users.id, targetUserId)).run();
-			tx.delete(schema.passwordResetTokens)
-				.where(eq(schema.passwordResetTokens.userId, targetUserId))
-				.run();
-			tx.delete(schema.sessions).where(eq(schema.sessions.userId, targetUserId)).run();
+		await db.transaction(async (tx) => {
+			await tx.update(schema.users).set({ passwordHash }).where(eq(schema.users.id, targetUserId));
+			await tx
+				.delete(schema.passwordResetTokens)
+				.where(eq(schema.passwordResetTokens.userId, targetUserId));
+			await tx.delete(schema.sessions).where(eq(schema.sessions.userId, targetUserId));
 		});
 
 		return { success: true };

@@ -24,7 +24,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 		async ({}, use, workerInfo) => {
 			const dataDir = path.join(REPO_ROOT, '.test-data', `worker-${workerInfo.workerIndex}`);
 			const smtp = await startSmtpSink();
-			const dbPath = createSeededDb(dataDir);
+			const dbPath = await createSeededDb(dataDir);
 			let server: AppServer;
 			try {
 				server = await startAppServer({

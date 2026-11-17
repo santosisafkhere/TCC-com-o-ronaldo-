@@ -1,4 +1,5 @@
-import adapter from '@sveltejs/adapter-node';
+import adapterNode from '@sveltejs/adapter-node';
+import adapterVercel from '@sveltejs/adapter-vercel';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 // Vite HMR injects inline scripts into the dev server response that bypass
@@ -17,9 +18,10 @@ if (process.env.npm_lifecycle_event === 'build' && dev) {
 const config = {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter({
-			out: 'build'
-		}),
+		// Vercel sets VERCEL=1 during its builds: emit serverless functions there.
+		// Everywhere else (local, Docker, the e2e suite's `node build`) build a
+		// standalone Node server as before.
+		adapter: process.env.VERCEL ? adapterVercel() : adapterNode({ out: 'build' }),
 		csp: {
 			mode: 'nonce',
 			directives: {

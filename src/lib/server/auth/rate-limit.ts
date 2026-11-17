@@ -1,30 +1,48 @@
-// In-process only; resets on restart. Good enough for brute-force slowdown.
-// Does not coordinate across multiple processes — intentional for single-instance deployments.
-const buckets = new Map<string, { count: number; resetAt: number }>();
+import { eq, lt, sql } from 'drizzle-orm';
+import { db, schema } from '$lib/server/db';
 
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-let lastCleanup = Date.now();
+// Fixed-window attempt counter, stored in the database so the limit holds
+// across serverless instances and restarts (an in-memory Map would give every
+// instance its own fresh budget).
+//
+// One atomic upsert per attempt: a new or expired window restarts at 1,
+// otherwise the counter goes up. The attempt is allowed while the counter is
+// within `limit`, i.e. the first `limit` attempts of each window pass.
 
-export function checkRateLimit(key: string, limit = 5, windowMs = 15 * 60 * 1000): boolean {
-	const now = Date.now();
+export async function checkRateLimit(
+	key: string,
+	limit = 5,
+	windowMs = 15 * 60 * 1000
+): Promise<boolean> {
+	const now = new Date();
+	const resetAt = new Date(now.getTime() + windowMs);
+	const t = schema.rateLimits;
+	const expired = sql`${t.resetAt} <= ${now}`;
 
-	if (now - lastCleanup > CLEANUP_INTERVAL_MS) {
-		for (const [k, val] of buckets) {
-			if (now > val.resetAt) buckets.delete(k);
-		}
-		lastCleanup = now;
-	}
+	const [row] = await db
+		.insert(t)
+		.values({ key, count: 1, resetAt })
+		.onConflictDoUpdate({
+			target: t.key,
+			set: {
+				count: sql`CASE WHEN ${expired} THEN 1 ELSE ${t.count} + 1 END`,
+				resetAt: sql`CASE WHEN ${expired} THEN ${resetAt} ELSE ${t.resetAt} END`
+			}
+		})
+		.returning({ count: t.count });
 
-	const b = buckets.get(key);
-	if (!b || now > b.resetAt) {
-		buckets.set(key, { count: 1, resetAt: now + windowMs });
-		return true;
-	}
-	if (b.count >= limit) return false;
-	b.count++;
-	return true;
+	return (row?.count ?? 1) <= limit;
 }
 
-export function clearRateLimit(key: string): void {
-	buckets.delete(key);
+export async function clearRateLimit(key: string): Promise<void> {
+	await db.delete(schema.rateLimits).where(eq(schema.rateLimits.key, key));
+}
+
+/** Drop windows that have already ended. Called from the periodic cron run. */
+export async function purgeExpiredRateLimits(now = new Date()): Promise<number> {
+	const removed = await db
+		.delete(schema.rateLimits)
+		.where(lt(schema.rateLimits.resetAt, now))
+		.returning({ key: schema.rateLimits.key });
+	return removed.length;
 }

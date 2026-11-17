@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shrinkImage } from '$lib/imageShrink';
 	import { avatarCacheBusts, bustAvatarCache } from '$lib/avatarCache.svelte';
 	import { t, getLocale } from '$lib/i18n';
 	import { Camera, ImagePlus, Loader2, AlertTriangle } from '@lucide/svelte';
@@ -103,7 +104,7 @@
 		clearTimeout(errorTimer);
 		uploading = true;
 		const fd = new FormData();
-		fd.set('avatar', file);
+		fd.set('avatar', await shrinkImage(file));
 
 		try {
 			const res = await fetch(`/api/companions/${companionId}/avatar`, {

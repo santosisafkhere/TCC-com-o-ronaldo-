@@ -6,11 +6,11 @@ import crypto from 'crypto';
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeHexLowerCase } from '@oslojs/encoding';
 
-export function GET({ request }) {
-	const auth = validateApiKey(request);
+export async function GET({ request }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
 
-	const rows = db
+	const rows = await db
 		.select({
 			id: schema.apiKeys.id,
 			name: schema.apiKeys.name,
@@ -20,14 +20,13 @@ export function GET({ request }) {
 		})
 		.from(schema.apiKeys)
 		.where(eq(schema.apiKeys.userId, auth.userId))
-		.orderBy(desc(schema.apiKeys.createdAt))
-		.all();
+		.orderBy(desc(schema.apiKeys.createdAt));
 
 	return json({ data: rows });
 }
 
 export async function POST({ request }) {
-	const localAuth = validateApiKey(request);
+	const localAuth = await validateApiKey(request);
 	if (!localAuth) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	const body = await request.json().catch(() => null);
@@ -38,16 +37,19 @@ export async function POST({ request }) {
 	const keyPrefix = rawKey.slice(0, 11);
 	const keyHash = encodeHexLowerCase(sha256(new TextEncoder().encode(rawKey)));
 
-	db.insert(schema.apiKeys).values({
+	await db.insert(schema.apiKeys).values({
 		id,
 		userId: localAuth.userId,
 		name,
 		keyHash,
 		keyPrefix
-	}).run();
+	});
 
-	return json({
-		data: { id, name, keyPrefix, createdAt: new Date() },
-		rawKey: rawKey
-	}, { status: 201 });
+	return json(
+		{
+			data: { id, name, keyPrefix, createdAt: new Date() },
+			rawKey: rawKey
+		},
+		{ status: 201 }
+	);
 }

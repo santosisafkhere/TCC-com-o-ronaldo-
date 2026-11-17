@@ -1,1 +1,0 @@
-ALTER TABLE `journal_photos` ADD `media_type` text DEFAULT 'photo' NOT NULL;

@@ -6,27 +6,26 @@ import { companionForApiUser } from '$lib/server/api/access';
 import { notFound } from '$lib/server/api/errors';
 import crypto from 'crypto';
 
-export function GET({ request, params }) {
-	const auth = validateApiKey(request);
+export async function GET({ request, params }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const rows = db
+	const rows = await db
 		.select()
 		.from(schema.healthEvents)
 		.where(eq(schema.healthEvents.companionId, params.id))
-		.orderBy(desc(schema.healthEvents.occurredAt))
-		.all();
+		.orderBy(desc(schema.healthEvents.occurredAt));
 
 	return json({ data: rows });
 }
 
 export async function POST({ request, params }) {
-	const auth = validateApiKey(request);
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	if (!db.select().from(schema.companions).where(eq(schema.companions.id, params.id)).get()) {
+	if (!(await db.select().from(schema.companions).where(eq(schema.companions.id, params.id)))[0]) {
 		notFound('Companion');
 	}
 
@@ -42,7 +41,7 @@ export async function POST({ request, params }) {
 	}
 
 	const id = crypto.randomUUID();
-	db.insert(schema.healthEvents).values({
+	await db.insert(schema.healthEvents).values({
 		id,
 		companionId: params.id,
 		type: body.type,
@@ -52,8 +51,10 @@ export async function POST({ request, params }) {
 		vetName: body.vetName || null,
 		vetClinic: body.vetClinic || null,
 		loggedBy: auth.userId
-	}).run();
+	});
 
-	const event = db.select().from(schema.healthEvents).where(eq(schema.healthEvents.id, id)).get();
+	const event = (
+		await db.select().from(schema.healthEvents).where(eq(schema.healthEvents.id, id))
+	)[0];
 	return json({ data: event }, { status: 201 });
 }

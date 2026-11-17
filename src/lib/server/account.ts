@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { db, schema } from '$lib/server/db';
+import { db, schema, isUniqueViolation } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import {
@@ -105,11 +105,7 @@ export async function handleAccountUpdate(
 	try {
 		await db.update(schema.users).set(updates).where(eq(schema.users.id, userId));
 	} catch (err) {
-		if (
-			err instanceof Error &&
-			(err as Error & { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE' &&
-			err.message.includes('users.email')
-		) {
+		if (isUniqueViolation(err, 'users_email_idx')) {
 			return fail(400, { accountError: t(locale, 'error.emailAlreadyTaken') });
 		}
 		throw err;

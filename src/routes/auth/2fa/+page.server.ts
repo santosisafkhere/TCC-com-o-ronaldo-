@@ -29,7 +29,7 @@ export const actions: Actions = {
 		if (!pending) redirect(302, '/auth/login');
 
 		const rlKey = `2fa:${pending.userId}:${getClientAddress()}`;
-		if (!checkRateLimit(rlKey)) {
+		if (!(await checkRateLimit(rlKey))) {
 			clearPendingMfaCookie(cookies, secure);
 			return fail(429, { error: t(locale, 'error.tooManyLoginAttempts') });
 		}
@@ -70,7 +70,7 @@ export const actions: Actions = {
 
 		if (!ok) return fail(401, { error: t(locale, 'page.twofa.invalidCode') });
 
-		clearRateLimit(rlKey);
+		await clearRateLimit(rlKey);
 		clearPendingMfaCookie(cookies, secure);
 		const token = generateSessionToken();
 		const session = await createSession(token, user.id);

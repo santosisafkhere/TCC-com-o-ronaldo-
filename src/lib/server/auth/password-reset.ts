@@ -1,4 +1,4 @@
-import { db, schema } from '$lib/server/db';
+import { db, schema, lockInTransaction } from '$lib/server/db';
 import { and, eq, gte, lt } from 'drizzle-orm';
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from '@oslojs/encoding';
 import { sha256 } from '@oslojs/crypto/sha2';
@@ -29,31 +29,34 @@ function tokenToId(token: string): string {
  */
 export async function createResetToken(userId: string): Promise<string | null> {
 	const token = generateResetToken();
-	// One synchronous transaction so two near-simultaneous requests cannot both
-	// pass the cooldown check (better-sqlite3 transactions must not await).
-	const issued = db.transaction((tx) => {
-		const recent = tx
-			.select({ id: schema.passwordResetTokens.id })
-			.from(schema.passwordResetTokens)
-			.where(
-				and(
-					eq(schema.passwordResetTokens.userId, userId),
-					gte(schema.passwordResetTokens.createdAt, new Date(Date.now() - MIN_REISSUE_INTERVAL_MS))
+	// One transaction holding a per-user lock so two near-simultaneous requests
+	// cannot both pass the cooldown check.
+	const issued = await db.transaction(async (tx) => {
+		await lockInTransaction(tx, `password-reset:${userId}`);
+		const recent = (
+			await tx
+				.select({ id: schema.passwordResetTokens.id })
+				.from(schema.passwordResetTokens)
+				.where(
+					and(
+						eq(schema.passwordResetTokens.userId, userId),
+						gte(
+							schema.passwordResetTokens.createdAt,
+							new Date(Date.now() - MIN_REISSUE_INTERVAL_MS)
+						)
+					)
 				)
-			)
-			.get();
+		)[0];
 		if (recent) return false;
 
-		tx.delete(schema.passwordResetTokens)
-			.where(eq(schema.passwordResetTokens.userId, userId))
-			.run();
-		tx.insert(schema.passwordResetTokens)
-			.values({
-				id: tokenToId(token),
-				userId,
-				expiresAt: new Date(Date.now() + RESET_TOKEN_DURATION_MS)
-			})
-			.run();
+		await tx
+			.delete(schema.passwordResetTokens)
+			.where(eq(schema.passwordResetTokens.userId, userId));
+		await tx.insert(schema.passwordResetTokens).values({
+			id: tokenToId(token),
+			userId,
+			expiresAt: new Date(Date.now() + RESET_TOKEN_DURATION_MS)
+		});
 		return true;
 	});
 	return issued ? token : null;

@@ -124,7 +124,7 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		completeReminder(existing, locals.user.id);
+		await completeReminder(existing, locals.user.id);
 
 		// Prune completed non-recurring reminders older than 30 days
 		const thirtyDaysAgo = new Date();
@@ -167,22 +167,22 @@ export const actions: Actions = {
 		});
 		if (!existing) return fail(404, { error: t(locals.locale, 'error.reminderNotFound') });
 
-		db.transaction((tx) => {
-			tx.update(schema.reminders)
+		await db.transaction(async (tx) => {
+			await tx
+				.update(schema.reminders)
 				.set({ completedAt: null, completedBy: null })
-				.where(eq(schema.reminders.id, id))
-				.run();
+				.where(eq(schema.reminders.id, id));
 
 			// If recurring, delete all future instances in this series
 			if (existing.isRecurring && existing.seriesId) {
-				tx.delete(schema.reminders)
+				await tx
+					.delete(schema.reminders)
 					.where(
 						and(
 							eq(schema.reminders.seriesId, existing.seriesId),
 							gt(schema.reminders.dueAt, existing.dueAt)
 						)
-					)
-					.run();
+					);
 			}
 		});
 

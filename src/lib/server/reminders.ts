@@ -68,32 +68,30 @@ export function computeNextDueAt(reminder: Reminder): Date | null {
 	return next;
 }
 
-export function completeReminder(reminder: Reminder, userId: string): void {
-	db.transaction((tx) => {
-		tx.update(schema.reminders)
+export async function completeReminder(reminder: Reminder, userId: string): Promise<void> {
+	await db.transaction(async (tx) => {
+		await tx
+			.update(schema.reminders)
 			.set({ completedAt: new Date(), completedBy: userId })
-			.where(eq(schema.reminders.id, reminder.id))
-			.run();
+			.where(eq(schema.reminders.id, reminder.id));
 
 		const nextDueAt = computeNextDueAt(reminder);
 		if (!nextDueAt) return;
 
-		tx.insert(schema.reminders)
-			.values({
-				id: generateId(15),
-				companionId: reminder.companionId,
-				title: reminder.title,
-				description: reminder.description,
-				type: reminder.type,
-				dueAt: nextDueAt,
-				isRecurring: true,
-				recurrenceUnit: reminder.recurrenceUnit,
-				recurrenceInterval: reminder.recurrenceInterval,
-				recurrenceAnchor: reminder.recurrenceAnchor,
-				recurrenceAnchorValue: reminder.recurrenceAnchorValue,
-				seriesId: reminder.seriesId ?? reminder.id,
-				loggedBy: reminder.loggedBy
-			})
-			.run();
+		await tx.insert(schema.reminders).values({
+			id: generateId(15),
+			companionId: reminder.companionId,
+			title: reminder.title,
+			description: reminder.description,
+			type: reminder.type,
+			dueAt: nextDueAt,
+			isRecurring: true,
+			recurrenceUnit: reminder.recurrenceUnit,
+			recurrenceInterval: reminder.recurrenceInterval,
+			recurrenceAnchor: reminder.recurrenceAnchor,
+			recurrenceAnchorValue: reminder.recurrenceAnchorValue,
+			seriesId: reminder.seriesId ?? reminder.id,
+			loggedBy: reminder.loggedBy
+		});
 	});
 }

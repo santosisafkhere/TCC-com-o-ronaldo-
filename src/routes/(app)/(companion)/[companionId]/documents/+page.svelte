@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shrinkImage } from '$lib/imageShrink';
 	import { invalidateAll } from '$app/navigation';
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
@@ -55,7 +56,7 @@
 		try {
 			for (const file of files) {
 				const form = new FormData();
-				form.set('file', file);
+				form.set('file', await shrinkImage(file));
 				const res = await fetch(`/api/companions/${data.companion.id}/documents`, {
 					method: 'POST',
 					body: form

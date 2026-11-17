@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { assertCanEditCompanion } from '$lib/server/permissions';
 import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { db, schema, lockInTransaction } from '$lib/server/db';
 import { eq, and, count } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import { getImmichClient, immichKey, IMMICH_ASSET_ID_RE } from '$lib/server/storage';
@@ -66,42 +66,35 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	const loggedBy = locals.user.id;
 
 	// Wrap count + insert in a transaction so two concurrent picks cannot
-	// both observe a count under the cap and then both insert. `immediate`
-	// takes the write lock at BEGIN so concurrent transactions serialize
-	// cleanly under WAL instead of one hitting SQLITE_BUSY_SNAPSHOT and
-	// surfacing as a 500. The local upload path has the same TOCTOU
+	// both observe a count under the cap and then both insert. The advisory lock
+	// makes concurrent transactions for the same entry queue up. The local upload path has the same TOCTOU
 	// pre-existing; not addressed here.
-	const result = db.transaction(
-		(tx) => {
-			const rows = tx
-				.select({ value: count() })
-				.from(schema.journalPhotos)
-				.where(eq(schema.journalPhotos.entryId, entryId))
-				.all();
-			const mediaCount = rows[0]?.value ?? 0;
-			if (mediaCount >= MAX_DAILY_MEDIA) {
-				return { ok: false as const };
-			}
-			tx.insert(schema.journalPhotos)
-				.values({
-					id: mediaId,
-					entryId,
-					filename,
-					provider: 'immich',
-					storageKey: immichKey(assetId),
-					originalName: asset.originalFileName || null,
-					// Immich picker only surfaces images (videos are filtered out), so
-					// these are always photos.
-					mediaType: 'photo',
-					mimeType: asset.originalMimeType,
-					sizeBytes: asset.fileSizeInByte ?? 0,
-					loggedBy
-				})
-				.run();
-			return { ok: true as const };
-		},
-		{ behavior: 'immediate' }
-	);
+	const result = await db.transaction(async (tx) => {
+		await lockInTransaction(tx, `media:${entryId}`);
+		const rows = await tx
+			.select({ value: count() })
+			.from(schema.journalPhotos)
+			.where(eq(schema.journalPhotos.entryId, entryId));
+		const mediaCount = rows[0]?.value ?? 0;
+		if (mediaCount >= MAX_DAILY_MEDIA) {
+			return { ok: false as const };
+		}
+		await tx.insert(schema.journalPhotos).values({
+			id: mediaId,
+			entryId,
+			filename,
+			provider: 'immich',
+			storageKey: immichKey(assetId),
+			originalName: asset.originalFileName || null,
+			// Immich picker only surfaces images (videos are filtered out), so
+			// these are always photos.
+			mediaType: 'photo',
+			mimeType: asset.originalMimeType,
+			sizeBytes: asset.fileSizeInByte ?? 0,
+			loggedBy
+		});
+		return { ok: true as const };
+	});
 
 	if (!result.ok) {
 		error(400, t(locals.locale, 'error.maxMediaExceeded', { max: MAX_DAILY_MEDIA }));

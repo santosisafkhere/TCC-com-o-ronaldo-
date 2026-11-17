@@ -1,4 +1,4 @@
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import { copyFileSync, mkdirSync, existsSync, rmSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -11,7 +11,7 @@ import * as schema from './schema';
 
 // Drizzle handle type accepted by the seed functions and the boot-only helpers.
 // The app's db (passed in) and per-test sqlite dbs both satisfy it.
-type SeedDb = BetterSQLite3Database<typeof schema>;
+type SeedDb = PgDatabase<PgQueryResultHKT, typeof schema>;
 
 // One hash for all seed users; computed once per process (bcrypt cost 12 ~100ms).
 export const SEED_PASSWORD_HASH = bcrypt.hashSync('test-password-123', 12);
@@ -147,41 +147,39 @@ export function buildPhotoManifest(now: number): Array<{
 }
 
 /** Inserts the 4 user rows. Date-independent; safe to call separately. */
-export function seedUsers(db: BetterSQLite3Database<typeof schema>): void {
+export async function seedUsers(db: SeedDb): Promise<void> {
 	const passwordHash = SEED_PASSWORD_HASH;
 
-	db.insert(schema.users)
-		.values([
-			{
-				...SEED.admin,
-				passwordHash,
-				role: 'admin',
-				email: 'spike@swordfish2.ship',
-				phone: '(555) 010-2071'
-			},
-			{
-				...SEED.member,
-				passwordHash,
-				role: 'member',
-				email: 'jet@hammerhead.ship',
-				phone: '(555) 010-7402'
-			},
-			{
-				...SEED.caretaker,
-				passwordHash,
-				role: 'caretaker',
-				email: 'faye@redtail.ship',
-				phone: '(555) 010-0613'
-			},
-			{
-				...SEED.resetUser,
-				passwordHash,
-				role: 'member',
-				email: 'vicious@reddragon.club',
-				phone: '(555) 010-3417'
-			}
-		])
-		.run();
+	await db.insert(schema.users).values([
+		{
+			...SEED.admin,
+			passwordHash,
+			role: 'admin',
+			email: 'spike@swordfish2.ship',
+			phone: '(555) 010-2071'
+		},
+		{
+			...SEED.member,
+			passwordHash,
+			role: 'member',
+			email: 'jet@hammerhead.ship',
+			phone: '(555) 010-7402'
+		},
+		{
+			...SEED.caretaker,
+			passwordHash,
+			role: 'caretaker',
+			email: 'faye@redtail.ship',
+			phone: '(555) 010-0613'
+		},
+		{
+			...SEED.resetUser,
+			passwordHash,
+			role: 'member',
+			email: 'vicious@reddragon.club',
+			phone: '(555) 010-3417'
+		}
+	]);
 }
 
 /**
@@ -189,10 +187,10 @@ export function seedUsers(db: BetterSQLite3Database<typeof schema>): void {
  * weight entries, daily events, and reminders. All date-sensitive rows
  * are anchored to `now` so re-anchoring works cleanly.
  */
-export function seedContent(
-	db: BetterSQLite3Database<typeof schema>,
+export async function seedContent(
+	db: SeedDb,
 	opts: { now: number; shiftEndHours?: number }
-): void {
+): Promise<void> {
 	const now = opts.now;
 	const day = 24 * 60 * 60 * 1000;
 	const hour = 60 * 60 * 1000;
@@ -209,574 +207,558 @@ export function seedContent(
 	const jet = SEED.member.id;
 	const faye = SEED.caretaker.id;
 
-	db.insert(schema.companions)
-		.values([
-			{ ...SEED.companions.ein, ownerId: jet },
-			{ ...SEED.companions.edward, ownerId: jet }
-		])
-		.run();
+	await db.insert(schema.companions).values([
+		{ ...SEED.companions.ein, ownerId: jet },
+		{ ...SEED.companions.edward, ownerId: jet }
+	]);
 
-	db.insert(schema.companionCaretakers).values({ companionId: ein, userId: faye }).run();
+	await db.insert(schema.companionCaretakers).values({ companionId: ein, userId: faye });
 
 	// Active shift so the caretaker can see their companion.
-	db.insert(schema.caretakerShifts)
-		.values({
-			id: 'seed-shift-active',
-			userId: faye,
-			startAt: new Date(now - 1 * hour),
-			endAt: new Date(now + shiftEndHours * hour)
-		})
-		.run();
+	await db.insert(schema.caretakerShifts).values({
+		id: 'seed-shift-active',
+		userId: faye,
+		startAt: new Date(now - 1 * hour),
+		endAt: new Date(now + shiftEndHours * hour)
+	});
 
 	// ---- Reminders: upcoming, overdue, completed, recurring ----
-	db.insert(schema.reminders)
-		.values([
-			{
-				id: 'seed-reminder-1',
-				companionId: ein,
-				title: 'Annual checkup',
-				type: 'vet',
-				dueAt: new Date(now + 30 * day)
-			},
-			{
-				id: 'seed-reminder-2',
-				companionId: ein,
-				title: 'Grooming appointment',
-				type: 'grooming',
-				dueAt: new Date(now + 28 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-reminder-3',
-				companionId: ein,
-				title: 'Rabies booster',
-				type: 'vaccination',
-				dueAt: new Date(now + 60 * day),
-				loggedBy: jet
-			},
-			{
-				// Overdue: past due, not completed
-				id: 'seed-reminder-overdue',
-				companionId: ein,
-				title: 'Dental check',
-				type: 'vet',
-				dueAt: new Date(now - 5 * day),
-				loggedBy: jet
-			},
-			{
-				// Completed
-				id: 'seed-reminder-completed',
-				companionId: ein,
-				title: 'Flea treatment',
-				type: 'medication',
-				dueAt: new Date(now - 10 * day),
-				completedAt: new Date(now - 10 * day + 2 * hour),
-				completedBy: jet,
-				loggedBy: jet
-			},
-			{
-				// Recurring: monthly heartworm chew
-				id: 'seed-reminder-recurring',
-				companionId: ein,
-				title: 'Heartworm chew',
-				type: 'medication',
-				dueAt: new Date(now + 15 * day),
-				isRecurring: true,
-				recurrenceUnit: 'month',
-				recurrenceInterval: 1,
-				loggedBy: spike
-			},
-			{
-				// Due during the active caretaker shift so the care dashboard surfaces it.
-				id: 'seed-reminder-6',
-				companionId: ein,
-				title: 'Evening medication',
-				type: 'medication',
-				dueAt: new Date(now + 4 * hour),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-reminder-4',
-				companionId: edward,
-				title: 'Flea and tick dose',
-				type: 'medication',
-				dueAt: new Date(now + 25 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-reminder-5',
-				companionId: edward,
-				title: 'Spay follow-up',
-				type: 'vet',
-				dueAt: new Date(now + 45 * day),
-				loggedBy: jet
-			},
-			{
-				// Edward overdue
-				id: 'seed-reminder-edward-overdue',
-				companionId: edward,
-				title: 'Nail trim',
-				type: 'grooming',
-				dueAt: new Date(now - 3 * day),
-				loggedBy: jet
-			},
-			{
-				// Edward recurring
-				id: 'seed-reminder-edward-recurring',
-				companionId: edward,
-				title: 'Flea and tick topical',
-				type: 'medication',
-				dueAt: new Date(now + 20 * day),
-				isRecurring: true,
-				recurrenceUnit: 'month',
-				recurrenceInterval: 1,
-				loggedBy: jet
-			}
-		])
-		.run();
+	await db.insert(schema.reminders).values([
+		{
+			id: 'seed-reminder-1',
+			companionId: ein,
+			title: 'Annual checkup',
+			type: 'vet',
+			dueAt: new Date(now + 30 * day)
+		},
+		{
+			id: 'seed-reminder-2',
+			companionId: ein,
+			title: 'Grooming appointment',
+			type: 'grooming',
+			dueAt: new Date(now + 28 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-reminder-3',
+			companionId: ein,
+			title: 'Rabies booster',
+			type: 'vaccination',
+			dueAt: new Date(now + 60 * day),
+			loggedBy: jet
+		},
+		{
+			// Overdue: past due, not completed
+			id: 'seed-reminder-overdue',
+			companionId: ein,
+			title: 'Dental check',
+			type: 'vet',
+			dueAt: new Date(now - 5 * day),
+			loggedBy: jet
+		},
+		{
+			// Completed
+			id: 'seed-reminder-completed',
+			companionId: ein,
+			title: 'Flea treatment',
+			type: 'medication',
+			dueAt: new Date(now - 10 * day),
+			completedAt: new Date(now - 10 * day + 2 * hour),
+			completedBy: jet,
+			loggedBy: jet
+		},
+		{
+			// Recurring: monthly heartworm chew
+			id: 'seed-reminder-recurring',
+			companionId: ein,
+			title: 'Heartworm chew',
+			type: 'medication',
+			dueAt: new Date(now + 15 * day),
+			isRecurring: true,
+			recurrenceUnit: 'month',
+			recurrenceInterval: 1,
+			loggedBy: spike
+		},
+		{
+			// Due during the active caretaker shift so the care dashboard surfaces it.
+			id: 'seed-reminder-6',
+			companionId: ein,
+			title: 'Evening medication',
+			type: 'medication',
+			dueAt: new Date(now + 4 * hour),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-reminder-4',
+			companionId: edward,
+			title: 'Flea and tick dose',
+			type: 'medication',
+			dueAt: new Date(now + 25 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-reminder-5',
+			companionId: edward,
+			title: 'Spay follow-up',
+			type: 'vet',
+			dueAt: new Date(now + 45 * day),
+			loggedBy: jet
+		},
+		{
+			// Edward overdue
+			id: 'seed-reminder-edward-overdue',
+			companionId: edward,
+			title: 'Nail trim',
+			type: 'grooming',
+			dueAt: new Date(now - 3 * day),
+			loggedBy: jet
+		},
+		{
+			// Edward recurring
+			id: 'seed-reminder-edward-recurring',
+			companionId: edward,
+			title: 'Flea and tick topical',
+			type: 'medication',
+			dueAt: new Date(now + 20 * day),
+			isRecurring: true,
+			recurrenceUnit: 'month',
+			recurrenceInterval: 1,
+			loggedBy: jet
+		}
+	]);
 
 	// ---- Weight history ----
-	db.insert(schema.weightEntries)
-		.values([
-			// Ein: gentle realistic trend for a Pembroke Welsh Corgi (~24-26 lbs)
-			{
-				id: 'seed-weight-1',
-				companionId: ein,
-				weight: 24.2,
-				unit: 'lbs',
-				recordedAt: new Date(now - 150 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-weight-2',
-				companionId: ein,
-				weight: 24.8,
-				unit: 'lbs',
-				recordedAt: new Date(now - 110 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-weight-3',
-				companionId: ein,
-				weight: 25.3,
-				unit: 'lbs',
-				recordedAt: new Date(now - 70 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-weight-4',
-				companionId: ein,
-				weight: 25.1,
-				unit: 'lbs',
-				recordedAt: new Date(now - 35 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-weight-5',
-				companionId: ein,
-				weight: 25.6,
-				unit: 'lbs',
-				recordedAt: new Date(now - 5 * day),
-				loggedBy: jet
-			},
-			// Edward: young growing dog, trending up
-			{
-				id: 'seed-weight-e1',
-				companionId: edward,
-				weight: 17.8,
-				unit: 'lbs',
-				recordedAt: new Date(now - 120 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-weight-e2',
-				companionId: edward,
-				weight: 18.6,
-				unit: 'lbs',
-				recordedAt: new Date(now - 80 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-weight-e3',
-				companionId: edward,
-				weight: 19.2,
-				unit: 'lbs',
-				recordedAt: new Date(now - 40 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-weight-e4',
-				companionId: edward,
-				weight: 19.0,
-				unit: 'lbs',
-				recordedAt: new Date(now - 8 * day),
-				loggedBy: jet
-			}
-		])
-		.run();
+	await db.insert(schema.weightEntries).values([
+		// Ein: gentle realistic trend for a Pembroke Welsh Corgi (~24-26 lbs)
+		{
+			id: 'seed-weight-1',
+			companionId: ein,
+			weight: 24.2,
+			unit: 'lbs',
+			recordedAt: new Date(now - 150 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-weight-2',
+			companionId: ein,
+			weight: 24.8,
+			unit: 'lbs',
+			recordedAt: new Date(now - 110 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-weight-3',
+			companionId: ein,
+			weight: 25.3,
+			unit: 'lbs',
+			recordedAt: new Date(now - 70 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-weight-4',
+			companionId: ein,
+			weight: 25.1,
+			unit: 'lbs',
+			recordedAt: new Date(now - 35 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-weight-5',
+			companionId: ein,
+			weight: 25.6,
+			unit: 'lbs',
+			recordedAt: new Date(now - 5 * day),
+			loggedBy: jet
+		},
+		// Edward: young growing dog, trending up
+		{
+			id: 'seed-weight-e1',
+			companionId: edward,
+			weight: 17.8,
+			unit: 'lbs',
+			recordedAt: new Date(now - 120 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-weight-e2',
+			companionId: edward,
+			weight: 18.6,
+			unit: 'lbs',
+			recordedAt: new Date(now - 80 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-weight-e3',
+			companionId: edward,
+			weight: 19.2,
+			unit: 'lbs',
+			recordedAt: new Date(now - 40 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-weight-e4',
+			companionId: edward,
+			weight: 19.0,
+			unit: 'lbs',
+			recordedAt: new Date(now - 8 * day),
+			loggedBy: jet
+		}
+	]);
 
 	// ---- Health events ----
-	db.insert(schema.healthEvents)
-		.values([
-			{
-				id: 'seed-health-1',
-				companionId: ein,
-				type: 'vet_visit',
-				title: 'Wellness checkup',
-				occurredAt: new Date(now - 50 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-health-2',
-				companionId: ein,
-				type: 'vaccination',
-				title: 'Rabies vaccination',
-				occurredAt: new Date(now - 200 * day),
-				vetName: 'Dr. Bacchus',
-				vetClinic: 'Animal Treasure Veterinary',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-health-3',
-				companionId: ein,
-				type: 'procedure',
-				title: 'Dental cleaning',
-				occurredAt: new Date(now - 130 * day),
-				vetName: 'Dr. Bacchus',
-				vetClinic: 'Animal Treasure Veterinary',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-health-4',
-				companionId: edward,
-				type: 'procedure',
-				title: 'Spay surgery',
-				occurredAt: new Date(now - 250 * day),
-				vetName: 'Dr. Bacchus',
-				vetClinic: 'Animal Treasure Veterinary',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-health-5',
-				companionId: edward,
-				type: 'medication',
-				title: 'Ear infection treatment',
-				notes: 'Two-week course of ear drops.',
-				occurredAt: new Date(now - 75 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-health-6',
-				companionId: edward,
-				type: 'vet_visit',
-				title: 'Puppy wellness visit',
-				occurredAt: new Date(now - 100 * day),
-				vetName: 'Dr. Bacchus',
-				vetClinic: 'Animal Treasure Veterinary',
-				loggedBy: jet
-			}
-		])
-		.run();
+	await db.insert(schema.healthEvents).values([
+		{
+			id: 'seed-health-1',
+			companionId: ein,
+			type: 'vet_visit',
+			title: 'Wellness checkup',
+			occurredAt: new Date(now - 50 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-health-2',
+			companionId: ein,
+			type: 'vaccination',
+			title: 'Rabies vaccination',
+			occurredAt: new Date(now - 200 * day),
+			vetName: 'Dr. Bacchus',
+			vetClinic: 'Animal Treasure Veterinary',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-health-3',
+			companionId: ein,
+			type: 'procedure',
+			title: 'Dental cleaning',
+			occurredAt: new Date(now - 130 * day),
+			vetName: 'Dr. Bacchus',
+			vetClinic: 'Animal Treasure Veterinary',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-health-4',
+			companionId: edward,
+			type: 'procedure',
+			title: 'Spay surgery',
+			occurredAt: new Date(now - 250 * day),
+			vetName: 'Dr. Bacchus',
+			vetClinic: 'Animal Treasure Veterinary',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-health-5',
+			companionId: edward,
+			type: 'medication',
+			title: 'Ear infection treatment',
+			notes: 'Two-week course of ear drops.',
+			occurredAt: new Date(now - 75 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-health-6',
+			companionId: edward,
+			type: 'vet_visit',
+			title: 'Puppy wellness visit',
+			occurredAt: new Date(now - 100 * day),
+			vetName: 'Dr. Bacchus',
+			vetClinic: 'Animal Treasure Veterinary',
+			loggedBy: jet
+		}
+	]);
 
 	// ---- Daily events: walk/meal/bathroom/treat/play/grooming ----
-	db.insert(schema.dailyEvents)
-		.values([
-			{
-				id: 'seed-act-1',
-				companionId: ein,
-				type: 'walk',
-				durationMinutes: 30,
-				notes: 'Long loop around the block.',
-				loggedAt: new Date(now - 2 * hour),
-				loggedBy: faye
-			},
-			{
-				id: 'seed-act-2',
-				companionId: ein,
-				type: 'meal',
-				loggedAt: new Date(now - 5 * hour),
-				loggedBy: faye
-			},
-			{
-				id: 'seed-act-3',
-				companionId: ein,
-				type: 'bathroom',
-				loggedAt: new Date(now - 6 * hour),
-				loggedBy: faye
-			},
-			{
-				id: 'seed-act-4',
-				companionId: ein,
-				type: 'play',
-				durationMinutes: 15,
-				notes: 'Tug of war. He won.',
-				loggedAt: new Date(now - 1 * hour),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-act-5',
-				companionId: ein,
-				type: 'walk',
-				durationMinutes: 25,
-				loggedAt: new Date(now - 1 * day - 3 * hour),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-act-6',
-				companionId: ein,
-				type: 'meal',
-				loggedAt: new Date(now - 1 * day - 8 * hour),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-act-7',
-				companionId: ein,
-				type: 'grooming',
-				notes: 'Quick brush.',
-				loggedAt: new Date(now - 2 * day),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-act-8',
-				companionId: edward,
-				type: 'meal',
-				loggedAt: new Date(now - 4 * hour),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-act-9',
-				companionId: edward,
-				type: 'walk',
-				durationMinutes: 20,
-				notes: 'Off-leash, eventually.',
-				loggedAt: new Date(now - 3 * hour),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-act-10',
-				companionId: edward,
-				type: 'treat',
-				loggedAt: new Date(now - 1 * day - 2 * hour),
-				loggedBy: jet
-			},
-			{
-				id: 'seed-act-11',
-				companionId: edward,
-				type: 'play',
-				durationMinutes: 20,
-				loggedAt: new Date(now - 1 * day - 5 * hour),
-				loggedBy: jet
-			},
-			// Extra daily events for broader event-group variety
-			{
-				id: 'seed-act-12',
-				companionId: ein,
-				type: 'treat',
-				notes: 'Dried sardine as reward.',
-				loggedAt: new Date(now - 3 * day - 1 * hour),
-				loggedBy: jet,
-				eventGroupId: 'seed-group-morning-routine'
-			},
-			{
-				id: 'seed-act-13',
-				companionId: ein,
-				type: 'walk',
-				durationMinutes: 20,
-				loggedAt: new Date(now - 3 * day),
-				loggedBy: jet,
-				eventGroupId: 'seed-group-morning-routine'
-			}
-		])
-		.run();
+	await db.insert(schema.dailyEvents).values([
+		{
+			id: 'seed-act-1',
+			companionId: ein,
+			type: 'walk',
+			durationMinutes: 30,
+			notes: 'Long loop around the block.',
+			loggedAt: new Date(now - 2 * hour),
+			loggedBy: faye
+		},
+		{
+			id: 'seed-act-2',
+			companionId: ein,
+			type: 'meal',
+			loggedAt: new Date(now - 5 * hour),
+			loggedBy: faye
+		},
+		{
+			id: 'seed-act-3',
+			companionId: ein,
+			type: 'bathroom',
+			loggedAt: new Date(now - 6 * hour),
+			loggedBy: faye
+		},
+		{
+			id: 'seed-act-4',
+			companionId: ein,
+			type: 'play',
+			durationMinutes: 15,
+			notes: 'Tug of war. He won.',
+			loggedAt: new Date(now - 1 * hour),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-act-5',
+			companionId: ein,
+			type: 'walk',
+			durationMinutes: 25,
+			loggedAt: new Date(now - 1 * day - 3 * hour),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-act-6',
+			companionId: ein,
+			type: 'meal',
+			loggedAt: new Date(now - 1 * day - 8 * hour),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-act-7',
+			companionId: ein,
+			type: 'grooming',
+			notes: 'Quick brush.',
+			loggedAt: new Date(now - 2 * day),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-act-8',
+			companionId: edward,
+			type: 'meal',
+			loggedAt: new Date(now - 4 * hour),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-act-9',
+			companionId: edward,
+			type: 'walk',
+			durationMinutes: 20,
+			notes: 'Off-leash, eventually.',
+			loggedAt: new Date(now - 3 * hour),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-act-10',
+			companionId: edward,
+			type: 'treat',
+			loggedAt: new Date(now - 1 * day - 2 * hour),
+			loggedBy: jet
+		},
+		{
+			id: 'seed-act-11',
+			companionId: edward,
+			type: 'play',
+			durationMinutes: 20,
+			loggedAt: new Date(now - 1 * day - 5 * hour),
+			loggedBy: jet
+		},
+		// Extra daily events for broader event-group variety
+		{
+			id: 'seed-act-12',
+			companionId: ein,
+			type: 'treat',
+			notes: 'Dried sardine as reward.',
+			loggedAt: new Date(now - 3 * day - 1 * hour),
+			loggedBy: jet,
+			eventGroupId: 'seed-group-morning-routine'
+		},
+		{
+			id: 'seed-act-13',
+			companionId: ein,
+			type: 'walk',
+			durationMinutes: 20,
+			loggedAt: new Date(now - 3 * day),
+			loggedBy: jet,
+			eventGroupId: 'seed-group-morning-routine'
+		}
+	]);
 
 	// ---- Journal entries: ~10-14 per companion, all moods, unique per date ----
 	// Ein journal entries across the last ~6 weeks
-	db.insert(schema.journalEntries)
-		.values([
-			{
-				id: 'seed-journal-ein-d1',
-				companionId: ein,
-				date: new Date(now - 1 * day).toISOString().slice(0, 10),
-				body: 'Spent most of the morning watching the courtyard with unusual focus. Something out there only he can see.',
-				mood: 'good',
-				loggedBy: spike
-			},
-			{
-				id: 'seed-journal-ein-d2',
-				companionId: ein,
-				date: new Date(now - 3 * day).toISOString().slice(0, 10),
-				body: 'He sat next to me while I worked, placing one paw on the keyboard at key moments. Good notes, honestly.',
-				mood: 'great',
-				loggedBy: faye
-			},
-			{
-				id: 'seed-journal-ein-d3',
-				companionId: ein,
-				date: new Date(now - 5 * day).toISOString().slice(0, 10),
-				body: 'Off his food this morning. Ate well in the evening. Keeping an eye on it.',
-				mood: 'meh',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-ein-d4',
-				companionId: ein,
-				date: new Date(now - 7 * day).toISOString().slice(0, 10),
-				body: 'Met a very serious cat on the morning walk. A long standoff was had. No clear winner.',
-				mood: 'great',
-				loggedBy: faye
-			},
-			{
-				id: 'seed-journal-ein-d5',
-				companionId: ein,
-				date: new Date(now - 10 * day).toISOString().slice(0, 10),
-				body: 'Limping slightly after the afternoon walk — checked paws, nothing obvious. Rested the rest of the day.',
-				mood: 'off',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-ein-d6',
-				companionId: ein,
-				date: new Date(now - 14 * day).toISOString().slice(0, 10),
-				body: 'Slept through the entire afternoon in a single sunbeam. Productivity zero, contentment maximal.',
-				mood: 'good',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-ein-d7',
-				companionId: ein,
-				date: new Date(now - 17 * day).toISOString().slice(0, 10),
-				body: 'Absolutely demolished his enrichment toy in record time. The kibble inside was recovered in under three minutes.',
-				mood: 'great',
-				loggedBy: spike
-			},
-			{
-				id: 'seed-journal-ein-d8',
-				companionId: ein,
-				date: new Date(now - 21 * day).toISOString().slice(0, 10),
-				body: 'Upset stomach — soft food only, small portions. Vet said to monitor for 48 hours.',
-				mood: 'sick',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-ein-d9',
-				companionId: ein,
-				date: new Date(now - 28 * day).toISOString().slice(0, 10),
-				body: 'Clean bill of health at his checkup. Treated him to a long walk afterward.',
-				mood: 'good',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-ein-d10',
-				companionId: ein,
-				date: new Date(now - 35 * day).toISOString().slice(0, 10),
-				body: 'Two new tricks mastered: high-five and spin. He performed them in sequence without being asked.',
-				mood: 'great',
-				loggedBy: spike
-			},
-			{
-				id: 'seed-journal-ein-d11',
-				companionId: ein,
-				date: new Date(now - 40 * day).toISOString().slice(0, 10),
-				body: 'Quiet day indoors. Rain kept walks short. He approved of the blanket arrangement.',
-				mood: 'good',
-				loggedBy: jet
-			}
-		])
-		.run();
+	await db.insert(schema.journalEntries).values([
+		{
+			id: 'seed-journal-ein-d1',
+			companionId: ein,
+			date: new Date(now - 1 * day).toISOString().slice(0, 10),
+			body: 'Spent most of the morning watching the courtyard with unusual focus. Something out there only he can see.',
+			mood: 'good',
+			loggedBy: spike
+		},
+		{
+			id: 'seed-journal-ein-d2',
+			companionId: ein,
+			date: new Date(now - 3 * day).toISOString().slice(0, 10),
+			body: 'He sat next to me while I worked, placing one paw on the keyboard at key moments. Good notes, honestly.',
+			mood: 'great',
+			loggedBy: faye
+		},
+		{
+			id: 'seed-journal-ein-d3',
+			companionId: ein,
+			date: new Date(now - 5 * day).toISOString().slice(0, 10),
+			body: 'Off his food this morning. Ate well in the evening. Keeping an eye on it.',
+			mood: 'meh',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-ein-d4',
+			companionId: ein,
+			date: new Date(now - 7 * day).toISOString().slice(0, 10),
+			body: 'Met a very serious cat on the morning walk. A long standoff was had. No clear winner.',
+			mood: 'great',
+			loggedBy: faye
+		},
+		{
+			id: 'seed-journal-ein-d5',
+			companionId: ein,
+			date: new Date(now - 10 * day).toISOString().slice(0, 10),
+			body: 'Limping slightly after the afternoon walk — checked paws, nothing obvious. Rested the rest of the day.',
+			mood: 'off',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-ein-d6',
+			companionId: ein,
+			date: new Date(now - 14 * day).toISOString().slice(0, 10),
+			body: 'Slept through the entire afternoon in a single sunbeam. Productivity zero, contentment maximal.',
+			mood: 'good',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-ein-d7',
+			companionId: ein,
+			date: new Date(now - 17 * day).toISOString().slice(0, 10),
+			body: 'Absolutely demolished his enrichment toy in record time. The kibble inside was recovered in under three minutes.',
+			mood: 'great',
+			loggedBy: spike
+		},
+		{
+			id: 'seed-journal-ein-d8',
+			companionId: ein,
+			date: new Date(now - 21 * day).toISOString().slice(0, 10),
+			body: 'Upset stomach — soft food only, small portions. Vet said to monitor for 48 hours.',
+			mood: 'sick',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-ein-d9',
+			companionId: ein,
+			date: new Date(now - 28 * day).toISOString().slice(0, 10),
+			body: 'Clean bill of health at his checkup. Treated him to a long walk afterward.',
+			mood: 'good',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-ein-d10',
+			companionId: ein,
+			date: new Date(now - 35 * day).toISOString().slice(0, 10),
+			body: 'Two new tricks mastered: high-five and spin. He performed them in sequence without being asked.',
+			mood: 'great',
+			loggedBy: spike
+		},
+		{
+			id: 'seed-journal-ein-d11',
+			companionId: ein,
+			date: new Date(now - 40 * day).toISOString().slice(0, 10),
+			body: 'Quiet day indoors. Rain kept walks short. He approved of the blanket arrangement.',
+			mood: 'good',
+			loggedBy: jet
+		}
+	]);
 
 	// Edward journal entries
-	db.insert(schema.journalEntries)
-		.values([
-			{
-				id: 'seed-journal-edward-d1',
-				companionId: edward,
-				date: new Date(now - 2 * day).toISOString().slice(0, 10),
-				body: 'Rearranged the entire living room while everyone was asleep. Cause unknown. Motive unclear.',
-				mood: 'great',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-edward-d2',
-				companionId: edward,
-				date: new Date(now - 4 * day).toISOString().slice(0, 10),
-				body: 'Dismantled the couch cushions hunting for a toy that was in plain sight the whole time. Triumphant regardless.',
-				mood: 'great',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-edward-d3',
-				companionId: edward,
-				date: new Date(now - 6 * day).toISOString().slice(0, 10),
-				body: 'Refused the leash for twenty minutes, then walked perfectly. On her terms, as always.',
-				mood: 'meh',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-edward-d4',
-				companionId: edward,
-				date: new Date(now - 8 * day).toISOString().slice(0, 10),
-				body: 'Chased a leaf for a full ten minutes. Caught it. Deemed it unworthy. Released it. Standards are high.',
-				mood: 'great',
-				loggedBy: spike
-			},
-			{
-				id: 'seed-journal-edward-d5',
-				companionId: edward,
-				date: new Date(now - 11 * day).toISOString().slice(0, 10),
-				body: 'Picky about food today. Only ate after it was served on the good dish. We are being managed.',
-				mood: 'off',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-edward-d6',
-				companionId: edward,
-				date: new Date(now - 15 * day).toISOString().slice(0, 10),
-				body: 'Small cut on one pad from the park. Cleaned and wrapped. She cooperated surprisingly well.',
-				mood: 'off',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-edward-d7',
-				companionId: edward,
-				date: new Date(now - 18 * day).toISOString().slice(0, 10),
-				body: 'Ear infection flare — vet prescribed a second course of drops. She is not pleased about this.',
-				mood: 'sick',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-edward-d8',
-				companionId: edward,
-				date: new Date(now - 22 * day).toISOString().slice(0, 10),
-				body: 'Excellent run in the park. She outpaced every other dog there and seemed quietly smug about it.',
-				mood: 'great',
-				loggedBy: spike
-			},
-			{
-				id: 'seed-journal-edward-d9',
-				companionId: edward,
-				date: new Date(now - 29 * day).toISOString().slice(0, 10),
-				body: 'Good appetite, good energy. Learned sit-stay at last. The treat budget is suffering.',
-				mood: 'good',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-edward-d10',
-				companionId: edward,
-				date: new Date(now - 36 * day).toISOString().slice(0, 10),
-				body: 'Quiet day. Stayed close, which is unusual for her. Comfortable and warm on the couch all afternoon.',
-				mood: 'good',
-				loggedBy: jet
-			},
-			{
-				id: 'seed-journal-edward-d11',
-				companionId: edward,
-				date: new Date(now - 42 * day).toISOString().slice(0, 10),
-				body: 'First time on the agility set. She figured out the tunnel immediately and refused to leave it.',
-				mood: 'great',
-				loggedBy: spike
-			}
-		])
-		.run();
+	await db.insert(schema.journalEntries).values([
+		{
+			id: 'seed-journal-edward-d1',
+			companionId: edward,
+			date: new Date(now - 2 * day).toISOString().slice(0, 10),
+			body: 'Rearranged the entire living room while everyone was asleep. Cause unknown. Motive unclear.',
+			mood: 'great',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-edward-d2',
+			companionId: edward,
+			date: new Date(now - 4 * day).toISOString().slice(0, 10),
+			body: 'Dismantled the couch cushions hunting for a toy that was in plain sight the whole time. Triumphant regardless.',
+			mood: 'great',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-edward-d3',
+			companionId: edward,
+			date: new Date(now - 6 * day).toISOString().slice(0, 10),
+			body: 'Refused the leash for twenty minutes, then walked perfectly. On her terms, as always.',
+			mood: 'meh',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-edward-d4',
+			companionId: edward,
+			date: new Date(now - 8 * day).toISOString().slice(0, 10),
+			body: 'Chased a leaf for a full ten minutes. Caught it. Deemed it unworthy. Released it. Standards are high.',
+			mood: 'great',
+			loggedBy: spike
+		},
+		{
+			id: 'seed-journal-edward-d5',
+			companionId: edward,
+			date: new Date(now - 11 * day).toISOString().slice(0, 10),
+			body: 'Picky about food today. Only ate after it was served on the good dish. We are being managed.',
+			mood: 'off',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-edward-d6',
+			companionId: edward,
+			date: new Date(now - 15 * day).toISOString().slice(0, 10),
+			body: 'Small cut on one pad from the park. Cleaned and wrapped. She cooperated surprisingly well.',
+			mood: 'off',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-edward-d7',
+			companionId: edward,
+			date: new Date(now - 18 * day).toISOString().slice(0, 10),
+			body: 'Ear infection flare — vet prescribed a second course of drops. She is not pleased about this.',
+			mood: 'sick',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-edward-d8',
+			companionId: edward,
+			date: new Date(now - 22 * day).toISOString().slice(0, 10),
+			body: 'Excellent run in the park. She outpaced every other dog there and seemed quietly smug about it.',
+			mood: 'great',
+			loggedBy: spike
+		},
+		{
+			id: 'seed-journal-edward-d9',
+			companionId: edward,
+			date: new Date(now - 29 * day).toISOString().slice(0, 10),
+			body: 'Good appetite, good energy. Learned sit-stay at last. The treat budget is suffering.',
+			mood: 'good',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-edward-d10',
+			companionId: edward,
+			date: new Date(now - 36 * day).toISOString().slice(0, 10),
+			body: 'Quiet day. Stayed close, which is unusual for her. Comfortable and warm on the couch all afternoon.',
+			mood: 'good',
+			loggedBy: jet
+		},
+		{
+			id: 'seed-journal-edward-d11',
+			companionId: edward,
+			date: new Date(now - 42 * day).toISOString().slice(0, 10),
+			body: 'First time on the agility set. She figured out the tunnel immediately and refused to leave it.',
+			mood: 'great',
+			loggedBy: spike
+		}
+	]);
 
 	// ---- Journal photos ----
 	const photoManifest = buildPhotoManifest(now);
@@ -806,13 +788,13 @@ export function seedContent(
 		};
 	});
 
-	db.insert(schema.journalPhotos).values(photoRows).run();
+	await db.insert(schema.journalPhotos).values(photoRows);
 }
 
 /** Inserts all seed rows (users + content). Convenience wrapper for existing callers. */
-export function seedRows(db: BetterSQLite3Database<typeof schema>, opts: { now: number }): void {
-	seedUsers(db);
-	seedContent(db, opts);
+export async function seedRows(db: SeedDb, opts: { now: number }): Promise<void> {
+	await seedUsers(db);
+	await seedContent(db, opts);
 }
 
 /**
@@ -826,7 +808,7 @@ export async function ensureDemoUsers(db: SeedDb): Promise<number> {
 		where: (u, { eq }) => eq(u.id, SEED.admin.id)
 	});
 	if (existing) return 0;
-	seedUsers(db);
+	await seedUsers(db);
 	return 4;
 }
 
@@ -837,7 +819,11 @@ export async function ensureDemoUsers(db: SeedDb): Promise<number> {
  *
  * Called at boot and every 24h by startDemoRefreshScheduler.
  */
-export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: string): void {
+export async function refreshDemoContent(
+	db: SeedDb,
+	demoMode: boolean,
+	dataDir: string
+): Promise<void> {
 	// Fail closed: this is destructive (wipes every companion + rmSync of the
 	// journal uploads dir). It must never run against a real instance. The caller
 	// passes the live db, the RESOLVED DEMO_MODE flag, and DATA_DIR — this module
@@ -849,17 +835,17 @@ export function refreshDemoContent(db: SeedDb, demoMode: boolean, dataDir: strin
 		throw new Error('refreshDemoContent must only run with DEMO_MODE enabled');
 	}
 	const now = Date.now();
-	db.transaction((tx) => {
+	await db.transaction(async (tx) => {
 		// Explicit deletes for tables that reference both users and companions
 		// (cascade from companions alone would leave orphan rows if user deleted first)
-		tx.delete(schema.caretakerShifts).run();
-		tx.delete(schema.companionCaretakers).run();
+		await tx.delete(schema.caretakerShifts);
+		await tx.delete(schema.companionCaretakers);
 		// companions cascade to: journalEntries -> journalPhotos, healthEvents,
 		// weightEntries, dailyEvents, reminders
-		tx.delete(schema.companions).run();
+		await tx.delete(schema.companions);
 		// Shift runs past the 24h reseed interval so the caretaker stays on-shift
 		// for the whole window between refreshes (issue #158).
-		seedContent(tx as never, { now, shiftEndHours: 25 });
+		await seedContent(tx as never, { now, shiftEndHours: 25 });
 	});
 	copyDemoPhotoFiles(join(dataDir, 'uploads'), now);
 }
@@ -875,11 +861,9 @@ const DEMO_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 export function startDemoRefreshScheduler(db: SeedDb, demoMode: boolean, dataDir: string): void {
 	if (demoRefreshTimer) return;
 	demoRefreshTimer = setInterval(() => {
-		try {
-			refreshDemoContent(db, demoMode, dataDir);
-		} catch (err) {
-			console.error('[demo] refresh failed:', err);
-		}
+		refreshDemoContent(db, demoMode, dataDir).catch((err) =>
+			console.error('[demo] refresh failed:', err)
+		);
 	}, DEMO_REFRESH_INTERVAL_MS);
 	demoRefreshTimer.unref();
 	console.info('[demo] demo refresh scheduler started (24h interval)');

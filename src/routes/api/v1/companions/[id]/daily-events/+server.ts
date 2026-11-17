@@ -7,31 +7,30 @@ import { notFound } from '$lib/server/api/errors';
 import { parseDailyEventType } from '$lib/server/validation';
 import crypto from 'crypto';
 
-export function GET({ request, params, url }) {
-	const auth = validateApiKey(request);
+export async function GET({ request, params, url }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
 	const typeFilter = parseDailyEventType(url.searchParams.get('type') ?? '');
 	const conditions = [eq(schema.dailyEvents.companionId, params.id)];
 	if (typeFilter) conditions.push(eq(schema.dailyEvents.type, typeFilter));
 
-	const rows = db
+	const rows = await db
 		.select()
 		.from(schema.dailyEvents)
 		.where(and(...conditions))
-		.orderBy(desc(schema.dailyEvents.loggedAt))
-		.all();
+		.orderBy(desc(schema.dailyEvents.loggedAt));
 
 	return json({ data: rows });
 }
 
 export async function POST({ request, params }) {
-	const auth = validateApiKey(request);
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	if (!db.select().from(schema.companions).where(eq(schema.companions.id, params.id)).get()) {
+	if (!(await db.select().from(schema.companions).where(eq(schema.companions.id, params.id)))[0]) {
 		notFound('Companion');
 	}
 
@@ -45,7 +44,7 @@ export async function POST({ request, params }) {
 	}
 
 	const id = crypto.randomUUID();
-	db.insert(schema.dailyEvents).values({
+	await db.insert(schema.dailyEvents).values({
 		id,
 		companionId: params.id,
 		type: body.type,
@@ -53,8 +52,10 @@ export async function POST({ request, params }) {
 		durationMinutes: body.durationMinutes || null,
 		loggedAt: body.loggedAt ? new Date(body.loggedAt) : new Date(),
 		loggedBy: auth.userId
-	}).run();
+	});
 
-	const event = db.select().from(schema.dailyEvents).where(eq(schema.dailyEvents.id, id)).get();
+	const event = (
+		await db.select().from(schema.dailyEvents).where(eq(schema.dailyEvents.id, id))
+	)[0];
 	return json({ data: event }, { status: 201 });
 }

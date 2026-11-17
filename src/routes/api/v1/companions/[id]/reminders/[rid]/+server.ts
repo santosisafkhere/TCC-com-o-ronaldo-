@@ -5,16 +5,17 @@ import { validateApiKey } from '$lib/server/api/validate';
 import { companionForApiUser } from '$lib/server/api/access';
 import { notFound } from '$lib/server/api/errors';
 
-export function GET({ request, params }) {
-	const auth = validateApiKey(request);
+export async function GET({ request, params }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const reminder = db
-		.select()
-		.from(schema.reminders)
-		.where(and(eq(schema.reminders.id, params.rid), eq(schema.reminders.companionId, params.id)))
-		.get();
+	const reminder = (
+		await db
+			.select()
+			.from(schema.reminders)
+			.where(and(eq(schema.reminders.id, params.rid), eq(schema.reminders.companionId, params.id)))
+	)[0];
 
 	if (!reminder) notFound('Reminder');
 
@@ -22,15 +23,16 @@ export function GET({ request, params }) {
 }
 
 export async function PATCH({ request, params }) {
-	const auth = validateApiKey(request);
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const existing = db
-		.select()
-		.from(schema.reminders)
-		.where(and(eq(schema.reminders.id, params.rid), eq(schema.reminders.companionId, params.id)))
-		.get();
+	const existing = (
+		await db
+			.select()
+			.from(schema.reminders)
+			.where(and(eq(schema.reminders.id, params.rid), eq(schema.reminders.companionId, params.id)))
+	)[0];
 
 	if (!existing) notFound('Reminder');
 
@@ -49,38 +51,45 @@ export async function PATCH({ request, params }) {
 		}
 	}
 
-	const allowed = ['title', 'description', 'type', 'dueAt', 'isRecurring',
-		'recurrenceUnit', 'recurrenceInterval'];
+	const allowed = [
+		'title',
+		'description',
+		'type',
+		'dueAt',
+		'isRecurring',
+		'recurrenceUnit',
+		'recurrenceInterval'
+	];
 	for (const field of allowed) {
 		if (body[field] !== undefined) updateFields[field] = body[field];
 	}
 	if (body.dueAt) updateFields.dueAt = new Date(body.dueAt);
 
 	if (Object.keys(updateFields).length > 0) {
-		db.update(schema.reminders)
-			.set(updateFields)
-			.where(eq(schema.reminders.id, params.rid))
-			.run();
+		await db.update(schema.reminders).set(updateFields).where(eq(schema.reminders.id, params.rid));
 	}
 
-	const reminder = db.select().from(schema.reminders).where(eq(schema.reminders.id, params.rid)).get();
+	const reminder = (
+		await db.select().from(schema.reminders).where(eq(schema.reminders.id, params.rid))
+	)[0];
 	return json({ data: reminder });
 }
 
-export function DELETE({ request, params }) {
-	const auth = validateApiKey(request);
+export async function DELETE({ request, params }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
-	if (!companionForApiUser(params.id, auth.userId)) notFound('Companion');
+	if (!(await companionForApiUser(params.id, auth.userId))) notFound('Companion');
 
-	const existing = db
-		.select()
-		.from(schema.reminders)
-		.where(and(eq(schema.reminders.id, params.rid), eq(schema.reminders.companionId, params.id)))
-		.get();
+	const existing = (
+		await db
+			.select()
+			.from(schema.reminders)
+			.where(and(eq(schema.reminders.id, params.rid), eq(schema.reminders.companionId, params.id)))
+	)[0];
 
 	if (!existing) notFound('Reminder');
 
-	db.delete(schema.reminders).where(eq(schema.reminders.id, params.rid)).run();
+	await db.delete(schema.reminders).where(eq(schema.reminders.id, params.rid));
 
 	return json({ data: { id: params.rid, deleted: true } });
 }

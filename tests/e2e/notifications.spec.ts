@@ -37,7 +37,7 @@ const test = base.extend<{ world: NotifyWorld }>({
 		);
 		const smtp = await startSmtpSink();
 		const ntfy = await startNtfyFake();
-		const dbPath = createSeededDb(dir);
+		const dbPath = await createSeededDb(dir);
 		let server: AppServer;
 		try {
 			server = await startAppServer({
@@ -299,7 +299,7 @@ base('notifications card describes push when only ntfy is enabled', async ({ pag
 		`notif-ntfyonly-${testInfo.workerIndex}-${testInfo.testId}`
 	);
 	const ntfy = await startNtfyFake();
-	const dbPath = createSeededDb(dir);
+	const dbPath = await createSeededDb(dir);
 	const server = await startAppServer({ dbPath, env: { NTFY_URL: ntfy.url } });
 	try {
 		await login(page, server.baseURL, SEED.member.username);

@@ -5,8 +5,8 @@ import { validateApiKey } from '$lib/server/api/validate';
 import { visibleCompanionIds } from '$lib/server/api/access';
 import crypto from 'crypto';
 
-export function GET({ request, url }) {
-	const auth = validateApiKey(request);
+export async function GET({ request, url }) {
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
@@ -14,25 +14,20 @@ export function GET({ request, url }) {
 	const offset = (page - 1) * limit;
 
 	// Ownership scoping: a key only ever sees pets its user owns or is shared.
-	const ids = visibleCompanionIds(auth.userId);
+	const ids = await visibleCompanionIds(auth.userId);
 	if (ids.length === 0) {
 		return json({ data: [], pagination: { page, limit, total: 0, pages: 0 } });
 	}
 
-	const rows = db
+	const rows = await db
 		.select()
 		.from(schema.companions)
 		.where(inArray(schema.companions.id, ids))
 		.limit(limit)
 		.offset(offset)
-		.orderBy(desc(schema.companions.createdAt))
-		.all();
+		.orderBy(desc(schema.companions.createdAt));
 
-	const total = db
-		.select({ count: schema.companions.id })
-		.from(schema.companions)
-		.where(inArray(schema.companions.id, ids))
-		.all().length;
+	const total = await db.$count(schema.companions, inArray(schema.companions.id, ids));
 
 	return json({
 		data: rows,
@@ -41,7 +36,7 @@ export function GET({ request, url }) {
 }
 
 export async function POST({ request }) {
-	const auth = validateApiKey(request);
+	const auth = await validateApiKey(request);
 	if (!auth) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	const body = await request.json().catch(() => null);
@@ -50,7 +45,7 @@ export async function POST({ request }) {
 
 	const id = crypto.randomUUID();
 
-	db.insert(schema.companions).values({
+	await db.insert(schema.companions).values({
 		id,
 		ownerId: auth.userId,
 		name: body.name,
@@ -67,9 +62,11 @@ export async function POST({ request }) {
 		emergencyContactName: body.emergencyContactName || null,
 		emergencyContactPhone: body.emergencyContactPhone || null,
 		notesForSitter: body.notesForSitter || null
-	}).run();
+	});
 
-	const companion = db.select().from(schema.companions).where(eq(schema.companions.id, id)).get();
+	const companion = (
+		await db.select().from(schema.companions).where(eq(schema.companions.id, id))
+	)[0];
 
 	return json({ data: companion }, { status: 201 });
 }

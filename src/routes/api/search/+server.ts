@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	try {
 		return json({
-			results: search({
+			results: await search({
 				text: p.get('q') ?? '',
 				companionIds: p.getAll('companion'),
 				types,

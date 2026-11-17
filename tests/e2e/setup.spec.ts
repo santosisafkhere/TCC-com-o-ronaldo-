@@ -14,7 +14,7 @@ const test = base.extend<{ pristine: AppServer }>({
 			'.test-data',
 			`setup-${testInfo.workerIndex}-${testInfo.testId}`
 		);
-		const dbPath = createEmptyDb(dir);
+		const dbPath = await createEmptyDb(dir);
 		let server: AppServer;
 		try {
 			server = await startAppServer({ dbPath });

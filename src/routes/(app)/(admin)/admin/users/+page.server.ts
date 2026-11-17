@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
-import { db, schema } from '$lib/server/db';
+import { db, schema, isUniqueViolation } from '$lib/server/db';
 import { eq, and, ne, lt, gt } from 'drizzle-orm';
 import { generateId } from '$lib/server/utils';
 import bcrypt from 'bcryptjs';
@@ -294,11 +294,7 @@ export const actions: Actions = {
 				.set({ displayName, username, email, phone, role })
 				.where(eq(schema.users.id, userId));
 		} catch (err) {
-			if (
-				err instanceof Error &&
-				(err as Error & { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE' &&
-				err.message.includes('users.email')
-			) {
+			if (isUniqueViolation(err, 'users_email_idx')) {
 				return fail(400, { editError: t(locals.locale, 'error.emailAlreadyTaken') });
 			}
 			throw err;
@@ -358,15 +354,15 @@ export const actions: Actions = {
 				return fail(400, { assignError: t(locals.locale, 'error.invalidCompanionIds') });
 		}
 
-		db.transaction((tx) => {
-			tx.delete(schema.companionCaretakers)
-				.where(eq(schema.companionCaretakers.userId, userId))
-				.run();
+		await db.transaction(async (tx) => {
+			await tx
+				.delete(schema.companionCaretakers)
+				.where(eq(schema.companionCaretakers.userId, userId));
 
 			if (companionIds.length > 0) {
-				tx.insert(schema.companionCaretakers)
-					.values(companionIds.map((companionId) => ({ companionId, userId })))
-					.run();
+				await tx
+					.insert(schema.companionCaretakers)
+					.values(companionIds.map((companionId) => ({ companionId, userId })));
 			}
 		});
 
