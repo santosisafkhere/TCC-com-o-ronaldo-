@@ -26,6 +26,38 @@ const MIGRATIONS_DIR = './drizzle';
 const rawUrl = (process.env.DATABASE_URL ?? env.DATABASE_URL ?? '').trim();
 const isPostgresUrl = /^postgres(ql)?:\/\//i.test(rawUrl);
 
+// Serverless hosts have a read-only, throwaway disk: the embedded database
+// cannot live there. Fail with an explanation in the function logs instead of
+// an opaque "read-only file system" crash.
+const isServerless = !!process.env.VERCEL;
+if (isServerless && !isPostgresUrl) {
+	throw new Error(
+		rawUrl
+			? '[einvault] DATABASE_URL must be a postgresql:// connection string on Vercel ' +
+					'(the embedded database cannot run on a read-only filesystem).'
+			: '[einvault] DATABASE_URL is not set. On Vercel, add it under Project Settings -> ' +
+					'Environment Variables, using the Supabase "Transaction pooler" string ' +
+					'(port 6543), then redeploy.'
+	);
+}
+if (isServerless && /^db\.[a-z0-9]+\.supabase\.co$/i.test(safeHost(rawUrl))) {
+	// The direct host resolves to IPv6 only; Vercel functions have no IPv6, so
+	// every query would fail to connect.
+	console.error(
+		'[einvault] DATABASE_URL uses the direct Supabase host (db.<ref>.supabase.co), which ' +
+			'is IPv6-only and unreachable from Vercel. Use the "Transaction pooler" connection ' +
+			'string (…pooler.supabase.com:6543) instead.'
+	);
+}
+
+function safeHost(url: string): string {
+	try {
+		return new URL(url).hostname;
+	} catch {
+		return '';
+	}
+}
+
 async function openPglite(): Promise<Db> {
 	let dataDir: string | undefined;
 	if (rawUrl === 'memory://') {

@@ -16,8 +16,10 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 	let userCount;
 	try {
 		userCount = await db.$count(schema.users);
-	} catch {
-		// Tables not created yet; db:generate hasn't been run
+	} catch (err) {
+		// Tables not created yet (migrations not run), or the database is
+		// unreachable. Log the real cause: the page only shows a generic message.
+		console.error('[einvault] database check failed:', err);
 		if (!isSetupRoute) {
 			error(503, t(locals.locale, 'error.databaseNotInitialized'));
 		}
