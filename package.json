@@ -21,9 +21,9 @@
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.60.0",
-		"@sveltejs/adapter-node": "^5.5.4",
-		"@sveltejs/adapter-vercel": "^6.3.5",
-		"@sveltejs/kit": "^2.55.0",
+		"@sveltejs/adapter-node": "^6.0.1",
+		"@sveltejs/adapter-vercel": "^7.0.2",
+		"@sveltejs/kit": "^3.1.1",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@tailwindcss/vite": "^4.2.2",
 		"@types/mailparser": "^3.4.6",
